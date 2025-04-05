@@ -111,8 +111,8 @@
 
 .cart-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -4px;
+  right: -3px;
   background-color: #FF0000;
   color: white;
   border-radius: 50%;
@@ -159,4 +159,51 @@
 .user-dropdown-item i {
   margin-right: 10px;
   color: var(--primary-color);
+}
+
+.icon-btn {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+/* Nền tròn màu xám cho icon */
+.icon-circle-bg {
+  width: 40px;
+  height: 40px;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.icon-btn:hover .icon-circle-bg {
+  background-color: #e0e0e0;
+}
+
+/* Các màu có thể thay đổi */  
+.text-warning {
+  color: orange !important; /* Màu cam */
+}
+/* Hiệu ứng scale khi hover */
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Vị trí badge đã điều chỉnh */
+.badge-position {
+  top: 2px;
+  right: -2px; /* Dịch sang phải 5px */
+}
+
+.text-warning {
+  color: #FF8C00 !important; /* Màu cam */
 }
