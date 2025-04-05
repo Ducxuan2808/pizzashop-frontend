@@ -1,0 +1,142 @@
+// Hero Section
+.hero-section {
+  height: 500px;
+  overflow: hidden;
+  
+  .carousel,
+  .carousel-inner,
+  .carousel-item {
+    height: 100%;
+  }
+  
+  img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    filter: brightness(0.7);
+  }
+  
+  .carousel-caption {
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: left;
+    max-width: 600px;
+    left: 10%;
+    right: auto;
+  }
+}
+
+// Categories
+.card {
+  overflow: hidden;
+  
+  img.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  
+  &:hover img.card-img-top {
+    transform: scale(1.05);
+  }
+}
+
+// Testimonials
+.testimonial-card {
+  .avatar {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border: 3px solid var(--primary-color);
+  }
+}
+
+// About Section
+.about-img {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+// Feature Cards
+.feature-card {
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+}
+
+// Footer
+footer {
+  a {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      color: var(--primary-color) !important;
+      text-decoration: none;
+    }
+  }
+  
+  .social-icons {
+    a {
+      display: inline-flex;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: rgba(255,255,255,0.1);
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      
+      &:hover {
+        background-color: var(--primary-color);
+        color: white !important;
+      }
+    }
+  }
+}
+
+// Additional Styles
+.section-padding {
+  padding: 80px 0;
+}
+
+.rounded-pill {
+  border-radius: 50px !important;
+}
+
+.btn-lg {
+  padding: 12px 30px;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 400px;
+    
+    .carousel-caption {
+      max-width: 100%;
+      left: 5%;
+      right: 5%;
+    }
+  }
+  
+  .section-padding {
+    padding: 60px 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-section {
+    height: 350px;
+    
+    h1 {
+      font-size: 2rem;
+    }
+  }
+}
