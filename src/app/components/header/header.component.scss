@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #FF8C00; /* Màu cam chủ đạo */
+  --primary-color: #ff914d; /* Màu cam chủ đạo */
   --secondary-color: #FF4500; /* Màu cam đậm khi hover */
   --text-light: #ffffff;
   --text-dark: #333333;
@@ -21,6 +21,7 @@
 
 .logo-container img {
   max-height: 70px;
+  
 }
 
 .search-form {
@@ -159,4 +160,72 @@
 .user-dropdown-item i {
   margin-right: 10px;
   color: var(--primary-color);
+}
+
+.icon-btn {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+/* Nền tròn màu xám cho icon */
+.icon-circle-bg {
+  width: 40px;
+  height: 40px;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.icon-btn:hover .icon-circle-bg {
+  background-color: #e0e0e0;
+}
+
+/* Các màu có thể thay đổi */  
+.text-warning {
+  color: #ff914d !important; /* Màu cam */
+}
+/* Hiệu ứng scale khi hover */
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Vị trí badge đã điều chỉnh */
+.badge-position {
+  top: -3px;
+  right: -2px; /* Dịch sang phải 5px */
+}
+
+.text-warning {
+  color: #ff914d !important; /* Màu cam */
+}
+
+.navbar-nav .nav-link {
+  font-size: 1.05rem;            /* Tăng kích thước chữ */
+  padding: 0.5rem 1.2rem;        /* Tăng khoảng cách giữa các mục */
+  transition: background-color 0.3s ease;
+  border-radius: 0.4rem;
+  color: #fff !important;
+}
+
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  background-color: #dc3545 !important;  /* Nền đỏ khi hover/active */
+  color: #fff !important;
+}
+.navbar-nav .nav-item{
+  margin: 0 15px;
+  font-size: 40px !important;
+  padding: 0 !important;
+  font-weight: bold;
 }

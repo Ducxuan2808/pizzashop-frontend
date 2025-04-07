@@ -1,15 +1,15 @@
 <header class="bg-white border-bottom">
     <!-- Top bar -->
-    <div class="bg-warning text-center py-1 small text-white">
+    <div class="text-center py-1 small text-white" style="background-color: #ff914d;">
       Chào mừng bạn đến với PizZing!
     </div>
   
     <!-- Middle: Logo, search, hotline, buttons -->
-    <div class="container py-2 d-flex flex-wrap align-items-center justify-content-between">
+    <div class="container py-2 d-flex flex-wrap align-items-center justify-content-center">
       <!-- Logo -->
       <div class="d-flex align-items-center mb-2 mb-lg-0">
         <a class="navbar-brand" href="#">
-            <img src="../../image/notfound.jpg" alt="Dola Food" class="logo">
+            <img src="../../assets/image/logo_dai1.jpeg" alt="Dola Food" class="logo" height="60px" style="border-radius: 10px !important;">
           </a>
       </div>
   
@@ -34,16 +34,37 @@
           </div>
         </div>
   
-        <!-- User icon -->
-        <div class="icon-circle position-relative hover-scale">
-          <i class="fas fa-user text-success fs-5"></i>
+      
+        <!-- User icon với dropdown -->
+    <div class="user-dropdown position-relative">
+        <div>
+            <button class="btn icon-btn rounded-circle position-relative hover-scale">
+                <div class="icon-circle-bg">
+                    <i class="fas fa-user text-warning fs-5"></i>
+                </div>
+            </button>
         </div>
+        <div class="dropdown-menu user-dropdown-content shadow border-0">
+            <a class="dropdown-item py-2" href="#">
+                <i class="fas fa-sign-in-alt me-2 text-warning"></i> Đăng nhập
+            </a>
+            <a class="dropdown-item py-2" href="#">
+                <i class="fas fa-user-plus me-2 text-warning"></i> Đăng ký
+            </a>
+            <a class="dropdown-item py-2" href="#">
+                <i class="fas fa-heart me-2 text-warning"></i> Danh sách yêu thích (0)
+            </a>
+        </div>
+     </div>
   
         <!-- Cart icon -->
-        <div class="icon-circle position-relative hover-scale">
-          <i class="fas fa-shopping-cart text-success fs-5"></i>
-          <span class="badge bg-danger position-absolute top-0 end-0 translate-middle p-1 rounded-circle">0</span>
-        </div>
+         
+        <button class="btn icon-btn rounded-circle position-relative hover-scale">
+            <div class="icon-circle-bg">
+                <i class="fas fa-shopping-cart text-warning fs-5"></i>
+            </div>
+            <span class="badge bg-danger position-absolute badge-position p-1 rounded-circle">15</span>
+        </button>
   
         <!-- Buttons -->
         <button class="btn btn-danger rounded-pill px-3">Đặt món online</button>
@@ -52,26 +73,17 @@
     </div>
   
     <!-- Bottom nav -->
-    <nav class="navbar navbar-expand-lg bg-warning navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #ff914d;">
       <div class="container">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
           <span class="navbar-toggler-icon"></span>
         </button>
   
         <div class="collapse navbar-collapse" id="mainNavbar">
-          <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link active" href="#">Trang chủ</a></li>
+          <ul class="navbar-nav mx-auto mb-2 mb-lg-0 justify-content-between">
+            <li class="nav-item"><a class="nav-link" href="#">Trang chủ</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Giới thiệu</a></li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Sản phẩm</a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Pizza</a></li>
-                <li><a class="dropdown-item" href="#">Khai vị</a></li>
-                <li><a class="dropdown-item" href="#">Mỹ Ý</a></li>
-                <li><a class="dropdown-item" href="#">Salad</a></li>
-                <li><a class="dropdown-item" href="#">Thức uống</a></li>
-              </ul>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="#">Sản phẩm</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Tin tức</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Liên hệ</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Câu hỏi thường gặp</a></li>

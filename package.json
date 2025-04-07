@@ -21,6 +21,8 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@primeng/themes": "^19.0.10",
     "bootstrap": "^5.3.5",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
     "font-awesome": "^4.7.0",
     "primeicons": "^7.0.0",
     "primeng": "^19.0.10",
