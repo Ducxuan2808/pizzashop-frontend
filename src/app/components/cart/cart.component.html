@@ -1,0 +1,80 @@
+<app-header></app-header>
+<div class="cart-page-container">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-container">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Giỏ hàng</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mt-4">
+    <div class="row">
+      <!-- Cart Items -->
+      <div class="col-lg-8">
+        <div class="cart-header">
+          <h1 class="page-title">Giỏ hàng của bạn</h1>
+        </div>
+
+    
+        <!-- Cart Items List -->
+        <div class="cart-items">
+          <div class="cart-item">
+            <div class="row align-items-center">
+              <div class="col-md-2">
+                <img src="assets/images/pizza1.jpg" alt="Pizza" class="img-fluid">
+              </div>
+              <div class="col-md-4">
+                <h5 class="item-name">Pizza Hải Sản</h5>
+                <p class="item-options">Size: Lớn, Loại: Dày</p>
+                <p class="item-note">Ghi chú: Không hành</p>
+              </div>
+              <div class="col-md-2">
+                <div class="quantity-control">
+                  <button class="btn-quantity" (click)="decreaseQuantity()" [disabled]="quantity <= 1">-</button>
+                  <input type="number" class="quantity-input" [(ngModel)]="quantity" (change)="updateQuantity($event)" min="1" max="50">
+                  <button class="btn-quantity" (click)="increaseQuantity()" [disabled]="quantity >= 50">+</button>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="item-price">{{ itemPrice | currency:'VND':'symbol':'1.0-0' }}</div>
+              </div>
+              <div class="col-md-2">
+                <button class="btn-remove">Xóa</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="col-lg-4">
+        <div class="order-summary">
+          <h4 class="summary-title">Tóm tắt đơn hàng</h4>
+          <div class="summary-details">
+            <div class="summary-row">
+              <span>Tạm tính</span>
+              <span>{{ subtotal | currency:'VND':'symbol':'1.0-0' }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Phí vận chuyển</span>
+              <span>{{ shippingFee | currency:'VND':'symbol':'1.0-0' }}</span>
+            </div>
+            <div class="summary-row total">
+              <span>Tổng cộng</span>
+              <span>{{ total | currency:'VND':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+          <button class="btn-checkout">Thanh toán</button>
+          <a href="/" class="btn-continue">Tiếp tục mua hàng</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<app-footer></app-footer>

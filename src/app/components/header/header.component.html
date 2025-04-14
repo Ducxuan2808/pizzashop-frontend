@@ -14,10 +14,10 @@
       </div>
   
       <!-- Search bar -->
-      <form class="flex-grow-1 mx-3" style="max-width: 400px;">
+      <form class="flex-grow-1 mx-3" style="max-width: 400px;" (submit)="onSearch(); $event.preventDefault()">
         <div class="input-group">
-          <input type="text" class="form-control" placeholder="Nhập tên sản phẩm…" />
-          <button class="btn btn-danger"><i class="fas fa-search"></i></button>
+          <input type="text" class="form-control"  name="searchKeyword" placeholder="Nhập tên sản phẩm…" />
+          <button type="submit" class="btn btn-danger"><i class="fas fa-search"></i></button>
         </div>
       </form>
   
@@ -57,14 +57,93 @@
         </div>
      </div>
   
-        <!-- Cart icon -->
-         
-        <button class="btn icon-btn rounded-circle position-relative hover-scale">
+        <!-- Cart icon -->         
+        <div class="cart-wrapper position-relative">
+          <button class="btn icon-btn rounded-circle position-relative hover-scale">
             <div class="icon-circle-bg">
-                <i class="fas fa-shopping-cart text-warning fs-5"></i>
+              <i class="fas fa-shopping-cart text-warning fs-5"></i>
             </div>
             <span class="badge bg-danger position-absolute badge-position p-1 rounded-circle">15</span>
-        </button>
+          </button>
+          
+          <!-- Cart Popup -->
+          <div class="cart-popup">
+            <div class="cart-header">
+              <h5 class="m-0">Giỏ hàng của bạn</h5>
+            </div>
+            
+            <!-- Cart Items - Show this when cart has items -->
+            <div class="cart-body">
+              <!-- Sample Item 1 -->
+              <div class="cart-item">
+                <div class="item-image">
+                  <img src="assets/image/pizza1.jpg" alt="Pizza">
+                </div>
+                <div class="item-details">
+                  <div class="item-name">Pizza Chả Giò</div>
+                  <div class="item-options">Size 9 inch / Đế dày</div>
+                  <div class="item-price">89.000₫</div>
+                </div>
+                <div class="item-quantity">
+                  <button class="quantity-btn minus" onclick="updateCartQuantity(this, -1)">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number" class="quantity-input" value="5" min="1" max="50" onchange="updateCartTotal()" data-price="89000">
+                  <button class="quantity-btn plus" onclick="updateCartQuantity(this, 1)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+                <div class="item-delete">
+                  <button class="delete-btn">
+                    <i class="fas fa-trash-alt"></i> Xóa
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Sample Item 2 -->
+              <div class="cart-item">
+                <div class="item-image">
+                  <img src="assets/image/pizza2.jpg" alt="Pizza">
+                </div>
+                <div class="item-details">
+                  <div class="item-name">Pizza Gà Nướng Dứa</div>
+                  <div class="item-options">Size 6 inch / Đế xốp</div>
+                  <div class="item-price">159.000₫</div>
+                </div>
+                <div class="item-quantity">
+                  <button class="quantity-btn minus" onclick="updateCartQuantity(this, -1)">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number" class="quantity-input" value="1" min="1" max="50" onchange="updateCartTotal()" data-price="159000">
+                  <button class="quantity-btn plus" onclick="updateCartQuantity(this, 1)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+                <div class="item-delete">
+                  <button class="delete-btn">
+                    <i class="fas fa-trash-alt"></i> Xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Empty Cart - Show this when cart is empty -->
+            <!--
+            <div class="cart-empty">
+              <i class="fas fa-shopping-basket"></i>
+              <p>Không có sản phẩm nào trong giỏ hàng</p>
+            </div>
+            -->
+            
+            <div class="cart-footer">
+              <div class="cart-total">
+                <span>Tổng tiền:</span>
+                <span class="total-price" id="cartTotalPrice">584.000₫</span>
+              </div>
+              <a href="/checkout" class="btn-checkout">Thanh toán</a>
+            </div>
+          </div>
+        </div>
   
         <!-- Buttons -->
         <button class="btn btn-danger rounded-pill px-3">Đặt món online</button>

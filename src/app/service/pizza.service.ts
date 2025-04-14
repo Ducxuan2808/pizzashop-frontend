@@ -33,4 +33,9 @@ export class PizzaService{
         const params = new HttpParams().set('ids', pizzaIds.join(','));
         return this.http.get<Pizza[]>(`${this.apiGetPizzas}/by-ids`,{params});
     }
+
+    bestSellPizzas():Observable<Pizza[]>{
+        debugger
+        return this.http.get<Pizza[]>(`${this.apiGetPizzas}/best-seller`);
+    }
 }

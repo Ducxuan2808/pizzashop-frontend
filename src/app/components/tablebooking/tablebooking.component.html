@@ -1,0 +1,152 @@
+<app-header></app-header>
+
+<div class="booking-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-container">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Đặt bàn</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mt-4">
+    <div class="booking-content">
+      <div class="row">
+        <!-- Booking Form -->
+        <div class="col-lg-7">
+          <div class="booking-form">
+            <h2 class="booking-title">Đặt bàn</h2>
+            <p class="booking-desc">Đặt bàn trước để được phục vụ tốt nhất tại PizZing</p>
+
+            <form class="mt-4">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="fullName" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" id="phone" required>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email">
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="bookingDate" class="form-label">Ngày đặt bàn <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="bookingDate" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="bookingTime" class="form-label">Giờ đặt bàn <span class="text-danger">*</span></label>
+                  <div class="time-picker">
+                    <select class="form-control hour-select">
+                      <option value="">Giờ</option>
+                      <option value="08">08</option>
+                      <option value="09">09</option>
+                      <option value="10">10</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                      <option value="13">13</option>
+                      <option value="14">14</option>
+                      <option value="15">15</option>
+                      <option value="16">16</option>
+                      <option value="17">17</option>
+                      <option value="18">18</option>
+                      <option value="19">19</option>
+                      <option value="20">20</option>
+                      <option value="21">21</option>
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select class="form-control minute-select">
+                      <option value="">Phút</option>
+                      <option value="00">00</option>
+                      <option value="15">15</option>
+                      <option value="30">30</option>
+                      <option value="45">45</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="guestCount" class="form-label">Số lượng khách <span class="text-danger">*</span></label>
+                  <select class="form-control" id="guestCount" required>
+                    <option value="">Chọn số lượng</option>
+                    <option value="1">1 người</option>
+                    <option value="2">2 người</option>
+                    <option value="3-4">3-4 người</option>
+                    <option value="5-6">5-6 người</option>
+                    <option value="7-8">7-8 người</option>
+                    <option value="9+">9 người trở lên</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="tableType" class="form-label">Loại bàn</label>
+                  <select class="form-control" id="tableType">
+                    <option value="">Chọn loại bàn</option>
+                    <option value="standard">Bàn tiêu chuẩn</option>
+                    <option value="window">Bàn view cửa sổ</option>
+                    <option value="private">Phòng riêng</option>
+                    <option value="outdoor">Bàn ngoài trời</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="note" class="form-label">Ghi chú</label>
+                <textarea class="form-control" id="note" rows="3" placeholder="Nhu cầu đặc biệt, yêu cầu về chỗ ngồi..."></textarea>
+              </div>
+
+              <button type="submit" class="btn-booking">Đặt bàn ngay</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Booking Info -->
+        <div class="col-lg-5">
+          <div class="booking-info">
+            <div class="info-card opening-hours">
+              <h3 class="card-title">
+                <i class="far fa-clock"></i> Thời gian mở cửa
+              </h3>
+              <ul class="hours-list">
+                <li><span>Thứ 2 - Thứ 6</span> <span>08:00 - 21:30</span></li>
+                <li><span>Thứ 7 - Chủ nhật</span> <span>09:00 - 22:30</span></li>
+                <li><span>Ngày lễ</span> <span>09:00 - 22:30</span></li>
+              </ul>
+            </div>
+
+            <div class="info-card contact-info">
+              <h3 class="card-title">
+                <i class="fas fa-phone-alt"></i> Liên hệ đặt bàn
+              </h3>
+              <div class="hotline">1900 6750</div>
+            </div>
+
+            <div class="info-card location-info">
+              <h3 class="card-title">
+                <i class="fas fa-map-marker-alt"></i> Địa chỉ nhà hàng
+              </h3>
+              <p>70 Lữ Gia, Phường 15, Quận 11, TP.HCM</p>
+              <div class="map-container">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.447057414974!2d106.65052697586744!3d10.775827559282464!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752ec3c161a3fb%3A0xef77cd47a1cc691e!2zNzAgTMawIEdpYSwgUGjGsOG7nW5nIDE1LCBRdeG6rW4gMTEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaCwgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1695000000000!5m2!1svi!2s" width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

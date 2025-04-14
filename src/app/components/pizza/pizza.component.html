@@ -1,1 +1,273 @@
-<p>pizza works!</p>
+<app-header></app-header>
+<div class="pizza-page-container">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-container">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Pizza</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content Section -->
+  <div class="container mt-2">
+    <div class="row">
+      <!-- Sidebar Filters -->
+      <div class="col-lg-3">
+        <div class="filter-container">
+          <h5 class="filter-title">Danh mục sản phẩm</h5>
+          <ul class="category-list">
+            <li><a href="/">Trang chủ</a></li>
+            <li><a href="/gioi-thieu">Giới thiệu</a></li>
+            <li class="has-submenu">
+              <a href="/san-pham">Sản phẩm</a>
+            </li>
+            <li><a href="/tin-tuc">Tin tức</a></li>
+            <li><a href="/lien-he">Liên hệ</a></li>
+            <li><a href="/faq">Câu hỏi thường gặp</a></li>
+            <li><a href="/dat-ban">Đặt bàn</a></li>
+          </ul>
+
+          <div class="filter-box mt-4">
+            <h5 class="filter-title">Bộ lọc sản phẩm</h5>
+            <div class="filter-selected">
+              <span>Bạn chọn</span>
+            </div>
+
+            <!-- Price Filter -->
+            <div class="price-filter mt-3">
+              <h6 class="filter-subtitle">Chọn mức giá</h6>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-0-100000" 
+                  (click)="minPrice=0; maxPrice=100000; searchPizzas()">
+                <label class="form-check-label" for="price-0-100000">
+                  Dưới 100.000đ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-100000-200000"
+                  (click)="minPrice=100000; maxPrice=200000; searchPizzas()">
+                <label class="form-check-label" for="price-100000-200000">
+                  Từ 100.000đ - 200.000đ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-200000-300000"
+                  (click)="minPrice=200000; maxPrice=300000; searchPizzas()">
+                <label class="form-check-label" for="price-200000-300000">
+                  Từ 200.000đ - 300.000đ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-300000-500000"
+                  (click)="minPrice=300000; maxPrice=500000; searchPizzas()">
+                <label class="form-check-label" for="price-300000-500000">
+                  Từ 300.000đ - 500.000đ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-500000-1000000"
+                  (click)="minPrice=500000; maxPrice=1000000; searchPizzas()">
+                <label class="form-check-label" for="price-500000-1000000">
+                  Từ 500.000đ - 1 triệu
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-1000000-max"
+                  (click)="minPrice=1000000; maxPrice=10000000; searchPizzas()">
+                <label class="form-check-label" for="price-1000000-max">
+                  Trên 1 triệu
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceRange" id="price-all" checked
+                  (click)="minPrice=0; maxPrice=10000000; searchPizzas()">
+                <label class="form-check-label" for="price-all">
+                  Tất cả mức giá
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Products Area -->
+      <div class="col-lg-9">
+        <div class="products-header">
+          <h1 class="page-title">Pizza</h1>
+          
+          <!-- Sorting Options -->
+          <div class="sorting-options">
+            <span>Xếp theo:</span>
+            <div class="dropdown">
+              <button class="btn btn-sort dropdown-toggle" type="button" id="sortDropdown" 
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                {{ sortBy === 'price_asc' ? 'Giá thấp đến cao' : 
+                   sortBy === 'price_desc' ? 'Giá cao xuống thấp' :
+                   sortBy === 'name_asc' ? 'Tên A-Z' :
+                   sortBy === 'name_desc' ? 'Tên Z-A' :
+                   sortBy === 'newest' ? 'Hàng mới' : 'Mặc định' }}
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item" (click)="sortBy=''; searchPizzas()">Mặc định</a></li>
+                <li><a class="dropdown-item" (click)="sortBy='name_asc'; searchPizzas()">Tên A-Z</a></li>
+                <li><a class="dropdown-item" (click)="sortBy='name_desc'; searchPizzas()">Tên Z-A</a></li>
+                <li><a class="dropdown-item" (click)="sortBy='newest'; searchPizzas()">Hàng mới</a></li>
+                <li><a class="dropdown-item" (click)="sortBy='price_asc'; searchPizzas()">Giá thấp đến cao</a></li>
+                <li><a class="dropdown-item" (click)="sortBy='price_desc'; searchPizzas()">Giá cao xuống thấp</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="row pizza-grid">
+          <!-- Pizza Cards from API -->
+          <div class="col-md-4 mb-4" *ngFor="let pizza of pizzas">
+            <div class="pizza-card">
+              <div class="pizza-image">
+                <a href="javascript:void(0)" (click)="onProductClick(pizza.id)">
+                  <img [src]="pizza.url" [alt]="pizza.title" class="img-fluid">
+                </a>
+              </div>
+              <div class="pizza-info">
+                <h3 class="pizza-title">
+                  <a href="javascript:void(0)" (click)="onProductClick(pizza.id)">{{ pizza.title }}</a>
+                </h3>
+                <p class="pizza-description">
+                  {{ pizza.description.length > 100 ? (pizza.description.substring(0, 100) + '...') : pizza.description }}
+                </p>
+                <div class="pizza-price">Giá chỉ từ {{ formatPrice(pizza.base_price) }}</div>
+                <button class="btn-add-to-cart" (click)="openPopup(pizza)">Thêm</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="totalPages > 1">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              <li class="page-item" [class.disabled]="currentPage === 0">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              <li class="page-item" *ngFor="let page of visiblePages" [class.active]="page === currentPage + 1">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page - 1)">{{ page }}</a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="pizzas.length === 0">
+          <p>Không tìm thấy sản phẩm phù hợp với bộ lọc đã chọn.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pizza Selection Popup -->
+<div class="popup-overlay" *ngIf="popupVisible" (click)="closePopup()">
+  <div class="popup-content" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h3>{{ selectedPizza?.title }}</h3>
+      <button class="close-btn" (click)="closePopup()">&times;</button>
+    </div>
+    
+    <div class="popup-body" *ngIf="selectedPizza">
+      <div class="popup-product-info">
+        <div class="popup-product-image">
+          <img [src]="selectedPizza.url" [alt]="selectedPizza.title">
+        </div>
+        <div class="popup-product-details">
+          <h4>{{ selectedPizza.title }}</h4>
+          <p>{{ selectedPizza.description }}</p>
+          <div class="popup-product-price">Giá: {{ formatPrice(selectedPizzaPrice) }}</div>
+        </div>
+      </div>
+      
+      <div class="popup-options">
+        <!-- Size Selection -->
+        <div class="option-section">
+          <h5>Kích thước</h5>
+          <div class="option-list">
+            <div class="option-item" *ngFor="let size of sizes">
+              <input type="radio" 
+                     [id]="'size-' + size.id" 
+                     name="pizza-size" 
+                     [value]="size.id" 
+                     [checked]="selectedSizeId === size.id"
+                     (change)="selectSize(size.id)">
+              <label [for]="'size-' + size.id">
+                {{ size.size_name }} <span *ngIf="size.price_multiplier > 1">(+{{ formatPrice(selectedPizza.base_price * (size.price_multiplier - 1)) }})</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Crust Selection -->
+        <div class="option-section">
+          <h5>Loại đế</h5>
+          <div class="option-list">
+            <div class="option-item" *ngFor="let type of types">
+              <input type="radio" 
+                     [id]="'crust-' + type.id" 
+                     name="pizza-crust" 
+                     [value]="type.id" 
+                     [checked]="selectedTypeId === type.id"
+                     (change)="selectType(type.id)">
+              <label [for]="'crust-' + type.id">
+                {{ type.base_name }} <span *ngIf="type.price > 0">(+{{ formatPrice(type.price) }})</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="option-section">
+          <h5>Ghi chú</h5>
+          <textarea [value]="orderNote" 
+                    (input)="updateOrderNote($event)" 
+                    class="form-control" 
+                    placeholder="Ghi chú thêm cho món ăn (tùy chọn)"></textarea>
+        </div>
+        
+        <!-- Quantity -->
+        <div class="option-section">
+          <h5>Số lượng</h5>
+          <div class="quantity-control">
+            <button class="btn-quantity btn-decrease" (click)="decreaseQuantity()">-</button>
+            <span class="quantity-value">{{ quantity }}</span>
+            <button class="btn-quantity btn-increase" (click)="increaseQuantity()">+</button>
+          </div>
+        </div>
+        
+        <!-- Total Price -->
+        <div class="total-price">
+          <h5>Tổng cộng: {{ formatPrice(selectedPizzaPrice * quantity) }}</h5>
+        </div>
+      </div>
+    </div>
+    
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="closePopup()">Hủy</button>
+      <button class="btn-add-to-cart" (click)="addToCart()">Thêm vào giỏ hàng</button>
+    </div>
+  </div>
+</div>
+<app-footer></app-footer>
+
+
+
+

@@ -34,28 +34,28 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.getPizzas(this.sortBy, this.minPrice, this.maxPrice, this.keyword, this.currentPage, this.itemsPerPage);
+    this.getPizzas();
   }
 
-  searchPizzas(){
-    this.currentPage = 0;
-    this.itemsPerPage = 6;
-    debugger
-    this.getPizzas(this.sortBy, this.minPrice, this.maxPrice, this.keyword, this.currentPage, this.itemsPerPage);
-  }
+  // searchPizzas(){
+  //   this.currentPage = 0;
+  //   this.itemsPerPage = 6;
+  //   debugger
+  //   this.getPizzas();
+  // }
 
 
-  getPizzas(sortBy: string, minPrice: number, maxPrice: number, keyword: string, currentPage: number, itemsPerPage: number) {
+  getPizzas() {
     debugger
-    this.pizzaService.getProducts(sortBy, minPrice, maxPrice, keyword, currentPage, itemsPerPage).subscribe({
+    this.pizzaService.bestSellPizzas().subscribe({
       next: (response:any) =>{
         debugger
         response.pizzas.forEach((pizza: Pizza) => { pizza.url=
           `${environment.apiBaseUrl}/pizzas/images/${pizza.thumbnail}`;
         });
-        this.pizzas = response.pizzas;
-        this.totalPages = response.totalPages;
-        this.visiblePages = this.generateVisiblePageArray(this.currentPage, this.totalPages);
+        this.pizzas = response.pizzas.slice(0, 4); // Get only the first 6 pizzas
+        //this.totalPages = response.totalPages;
+       // this.visiblePages = this.generateVisiblePageArray(this.currentPage, this.totalPages);
 
       },
       complete: ()=>{
@@ -66,26 +66,27 @@ export class HomeComponent implements OnInit {
         console.error('Error fetching products', error);
       }
     });
-  }  onPageChange(page: number){
-    debugger;
-    this.currentPage = page;
-    this.getPizzas(this.sortBy, this.minPrice, this.maxPrice, this.keyword, this.currentPage, this.itemsPerPage);
-  }
-  generateVisiblePageArray(currentPage:number, totalPages:number):number[] {
-    const maxVisiablePages = 5;
-    const halfVisiablePages = Math.floor(maxVisiablePages /2);
+  }  
+  // onPageChange(page: number){
+  //   debugger;
+  //   this.currentPage = page;
+  //   this.getPizzas(this.sortBy, this.minPrice, this.maxPrice, this.keyword, this.currentPage, this.itemsPerPage);
+  // }
+  // generateVisiblePageArray(currentPage:number, totalPages:number):number[] {
+  //   const maxVisiablePages = 5;
+  //   const halfVisiablePages = Math.floor(maxVisiablePages /2);
 
-    let startPage = Math.max(currentPage - halfVisiablePages, 1);
-    let endPage = Math.min(currentPage + halfVisiablePages- 1, totalPages);
+  //   let startPage = Math.max(currentPage - halfVisiablePages, 1);
+  //   let endPage = Math.min(currentPage + halfVisiablePages- 1, totalPages);
 
-    if(endPage- startPage +1 < maxVisiablePages){
-      startPage = Math.max(endPage-maxVisiablePages+1,1 );
-    }
-    return new Array(endPage-startPage +1).fill(0).map((_,index) => startPage+ index);
-  }
-  onProductClick(pizzzaId: number){
-    debugger
-    this.router.navigate(['/pizzas', pizzzaId]);
-  }
+  //   if(endPage- startPage +1 < maxVisiablePages){
+  //     startPage = Math.max(endPage-maxVisiablePages+1,1 );
+  //   }
+  //   return new Array(endPage-startPage +1).fill(0).map((_,index) => startPage+ index);
+  // }
+  // onProductClick(pizzzaId: number){
+  //   debugger
+  //   this.router.navigate(['/pizzas', pizzzaId]);
+  // }
 
 }

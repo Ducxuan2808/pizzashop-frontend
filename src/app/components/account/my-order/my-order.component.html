@@ -1,0 +1,168 @@
+<app-header></app-header>
+
+<div class="my-order-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-container">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+          <li class="breadcrumb-item"><a routerLink="/account">Tài khoản</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Đơn hàng của bạn</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <div class="row">
+      <!-- Left Sidebar -->
+      <div class="col-lg-3 col-md-4">
+        <div class="account-sidebar">
+          <div class="user-welcome">
+            <span class="account-icon"><i class="fas fa-user-circle"></i></span>
+            <div class="welcome-text">
+              <p>TRANG TÀI KHOẢN</p>
+              <p class="welcome-name">Xin chào, <span class="user-name">Xuan Nguyen</span>!</p>
+            </div>
+          </div>
+          
+          <div class="account-menu">
+            <ul>
+              <li><a routerLink="/account"><i class="fas fa-user"></i> Thông tin tài khoản</a></li>
+              <li class="active"><a routerLink="/account/orders"><i class="fas fa-shopping-bag"></i> Đơn hàng của bạn</a></li>
+              <li><a routerLink="/account/changepassword"><i class="fas fa-lock"></i> Đổi mật khẩu</a></li>
+               <li><a href="#" class="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Content -->
+      <div class="col-lg-9 col-md-8">
+        <div class="my-order-container">
+          <h2 class="page-title">Đơn hàng của bạn</h2>
+          
+          <!-- Order Filter -->
+          <div class="order-filter">
+            <div class="filter-dropdown">
+              <select class="form-select" (change)="onFilterChange($event)">
+                <option value="all" selected>Tất cả đơn hàng</option>
+                <option value="processing">Đang xử lý</option>
+                <option value="delivered">Đã giao hàng</option>
+                <option value="cancelled">Đã hủy</option>
+              </select>
+            </div>
+            
+            <div class="search-order">
+              <input type="text" class="form-control" placeholder="Tìm kiếm đơn hàng..." (input)="onSearch($event)">
+              <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+          </div>
+          
+          <!-- Orders List -->
+          <div class="orders-list" *ngIf="hasOrders()">
+            <!-- Order Item -->
+            <div class="order-item" *ngFor="let order of filteredOrders">
+              <div class="order-header">
+                <div class="order-date">
+                  <span class="label">Đơn hàng:</span>
+                  <span class="value">#{{ order.id }}</span>
+                  <span class="separator">|</span>
+                  <span class="date">{{ order.date }}</span>
+                </div>
+                <div class="order-status" [ngClass]="order.status">
+                  {{ order.status === 'processing' ? 'Đang xử lý' : 
+                     order.status === 'delivered' ? 'Đã giao hàng' : 'Đã hủy' }}
+                </div>
+              </div>
+              
+              <div class="order-content">
+                <div class="order-products">
+                  <div class="product-item" *ngFor="let product of order.products">
+                    <div class="product-image">
+                      <img [src]="product.image" [alt]="product.name">
+                    </div>
+                    <div class="product-info">
+                      <h3 class="product-name">{{ product.name }}</h3>
+                      <p class="product-variant">{{ product.variant }}</p>
+                      <p class="product-price">{{ formatPrice(product.price) }} <span class="quantity">x {{ product.quantity }}</span></p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="delivery-info">
+                  <h4 class="info-title">Thông tin nhận hàng</h4>
+                  <ul class="info-list">
+                    <li><span class="label">Người nhận:</span> <span class="value">{{ order.deliveryInfo?.recipientName || 'Xuan Nguyen' }}</span></li>
+                    <li><span class="label">Điện thoại:</span> <span class="value">{{ order.deliveryInfo?.phone || '0987654321' }}</span></li>
+                    <li><span class="label">Địa chỉ:</span> <span class="value">{{ order.deliveryInfo?.address || '123 Nguyễn Huệ, Quận 1, TP.HCM' }}</span></li>
+                    <li><span class="label">Phương thức giao hàng:</span> <span class="value">{{ order.deliveryInfo?.method || 'Giao hàng tận nhà' }}</span></li>
+                    <li><span class="label">Thời gian giao dự kiến:</span> <span class="value">{{ order.deliveryInfo?.expectedTime || '15:00 - 17:00, 16/05/2024' }}</span></li>
+                  </ul>
+                </div>
+                
+                <div class="payment-details">
+                  <div class="detail-row">
+                    <span class="label">Tổng tiền hàng:</span>
+                    <span class="value">{{ formatPrice(order.subtotal || order.totalAmount) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Phí vận chuyển:</span>
+                    <span class="value">{{ formatPrice(order.shippingFee || 30000) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Khuyến mãi:</span>
+                    <span class="value discount">-{{ formatPrice(order.discount || 0) }}</span>
+                  </div>
+                  <div class="detail-row total">
+                    <span class="label">Số tiền phải trả:</span>
+                    <span class="value">{{ formatPrice(order.totalAmount) }}</span>
+                  </div>
+                  <div class="detail-row payment-method">
+                    <span class="label">Thanh toán:</span>
+                    <span class="value method">{{ order.paymentMethod || 'Thanh toán khi nhận hàng (COD)' }}</span>
+                  </div>
+                </div>
+                
+                <div class="order-summary">
+                  <div class="action-buttons">
+                    <a href="#" class="btn-view-detail" (click)="$event.preventDefault(); viewOrderDetail(order.id)">Xem chi tiết</a>
+                    <a href="#" class="btn-reorder" (click)="$event.preventDefault(); reorder(order.id)">Đặt lại</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Empty Orders -->
+          <div class="empty-orders" *ngIf="!hasOrders()">
+            <div class="empty-image">
+              <img src="assets/images/empty-order.svg" alt="No Orders">
+            </div>
+            <p class="empty-message">Bạn chưa có đơn hàng nào</p>
+            <a href="/products" class="btn-shop-now">Mua sắm ngay</a>
+          </div>
+          
+          <!-- Pagination -->
+          <div class="pagination-container" *ngIf="filteredOrders.length > 0">
+            <ul class="pagination">
+              <li class="page-item disabled">
+                <a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

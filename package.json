@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@fortawesome/fontawesome-free": "^6.7.2",
+    "@ng-bootstrap/ng-bootstrap": "^18.0.0",
     "@primeng/themes": "^19.0.10",
     "bootstrap": "^5.3.5",
     "class-transformer": "^0.5.1",

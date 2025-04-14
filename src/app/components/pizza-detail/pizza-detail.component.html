@@ -1,0 +1,167 @@
+<app-header></app-header>
+
+<div class="pizza-detail-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-container">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+          <li class="breadcrumb-item"><a routerLink="/pizza">Pizza</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Product Detail -->
+  <div class="container">
+    <div class="product-detail">
+      <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+          <div class="product-images">
+            <div class="product-image-main">
+              <img [src]="product.image" [alt]="product.name" class="main-image">
+              <div class="product-labels">
+                <span class="label-status" *ngIf="product.inStock">Còn hàng</span>
+                <span class="label-status out-of-stock" *ngIf="!product.inStock">Hết hàng</span>
+                <span class="label-sale" *ngIf="product.discountPercent > 0">-{{ product.discountPercent }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="col-lg-6">
+          <div class="product-info">
+            <h1 class="product-name">{{ product.name }}</h1>
+            
+            <div class="product-pricing">
+              <div class="current-price">{{ selectedPrice | currency:'VND':'symbol':'1.0-0' }}</div>
+              <div class="old-price" *ngIf="product.discountPercent > 0">{{ originalPrice | currency:'VND':'symbol':'1.0-0' }}</div>
+            </div>
+
+
+            
+            <!-- Product Options -->
+            <div class="product-options">
+              <!-- Size Selection -->
+              <div class="option-group">
+                <h4 class="option-title">Kích cỡ</h4>
+                <div class="option-items">
+                  <div 
+                    *ngFor="let size of sizes" 
+                    class="option-item" 
+                    [class.active]="selectedSizeId === size.id" 
+                    (click)="selectSize(size.id)">
+                    <span class="option-name">{{ size.name }}</span>
+                    <span class="option-price" *ngIf="size.extraPrice > 0">+{{ size.extraPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Crust Type Selection -->
+              <div class="option-group">
+                <h4 class="option-title">Đế bánh</h4>
+                <div class="option-items">
+                  <div 
+                    *ngFor="let type of crustTypes" 
+                    class="option-item" 
+                    [class.active]="selectedCrustTypeId === type.id" 
+                    (click)="selectCrustType(type.id)">
+                    <span class="option-name">{{ type.name }}</span>
+                    <span class="option-price" *ngIf="type.extraPrice > 0">+{{ type.extraPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Quantity Selection -->
+              <div class="option-group">
+                <h4 class="option-title">Số lượng</h4>
+                <div class="quantity-selector">
+                  <button 
+                    class="quantity-btn" 
+                    [disabled]="quantity <= 1"
+                    (click)="decreaseQuantity()">−</button>
+                  <input 
+                    type="number" 
+                    class="quantity-input" 
+                    [value]="quantity" 
+                    min="1" 
+                    max="50"
+                    (change)="onQuantityChange($event)">
+                  <button 
+                    class="quantity-btn" 
+                    [disabled]="quantity >= 50"
+                    (click)="increaseQuantity()">+</button>
+                </div>
+              </div>
+              
+              <!-- Note Input -->
+              <div class="option-group">
+                <h4 class="option-title">Ghi chú</h4>
+                <textarea 
+                  class="note-input" 
+                  placeholder="Ghi chú đặc biệt cho món ăn này..." 
+                  [(ngModel)]="orderNote"
+                  rows="3"></textarea>
+              </div>
+            </div>
+            
+            <!-- Add to Cart Button -->
+            <div class="product-actions">
+              <button 
+                class="add-to-cart-btn" 
+                [disabled]="!product.inStock"
+                (click)="addToCart()">
+                Thêm vào giỏ hàng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product Description -->
+      <div class="product-description">
+        <h3 class="description-title">Mô tả món ăn</h3>
+        <div class="description-content">
+          <p>Bánh Pizza xúc xích cay kiểu Ý trên nền sốt cà chua mang lại hương vị trộn lẫn giữa cay cay và chua chua.</p>
+          
+          <h2>1. Ăn vỏ bánh trước tiên: Nhóm người tạo ảnh hưởng, thích sự khác biệt</h2>
+          <p>Đây là kiểu người thường bắt đầu ăn pizza bằng cách cắn phần vỏ bánh trước, sau đó mới ăn đến phần nhân (ăn phần rìa của bánh pizza trước). Cách ăn này khá "lạ", không giống với đa số mọi người nên đôi khi bạn sẽ bắt gặp những ánh mắt ngạc nhiên nhìn mình đấy.</p>
+          <p>Nếu thích ăn vỏ bánh pizza trước tiên thì bạn là kiểu người tạo ảnh hưởng, yêu thích sự khác biệt. Bạn không ngần ngại thể hiện cá tính, luôn làm mới bản thân, không giới hạn mình trong bất kỳ một khuôn khổ nào. Chưa kể bạn còn rất nhanh nhẹn, nắm bắt xu hướng nhanh chóng và thân thiện với mọi người.</p>
+          <div class="description-image">
+            <img src="https://images.unsplash.com/photo-1590947132387-155cc02f3212?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Ăn vỏ bánh pizza trước tiên">
+            <p class="image-caption">Ăn vỏ bánh pizza trước tiên thể hiện bạn là một người năng động và rất thích những cái mới.</p>
+          </div>
+          
+          <h2>2. Gập nhỏ miếng pizza khi ăn: Nhóm người điều khiển, làm nhiều việc cùng lúc</h2>
+          <p>Kiểu người này thường chọn cách gấp đôi miếng pizza lại để dễ ăn và ăn nhanh hơn. Nếu thuộc tuýp người gập nhỏ pizza khi ăn thì bạn có tính cách của người điều khiển, thích thực hiện nhiều việc cùng một lúc. Có thể là vừa ăn pizza vừa gọi điện hoặc làm việc.</p>
+          <p>Cách ăn này không hẳn là để thưởng thức hương vị thơm ngon của pizza, mà đơn thuần là bạn chỉ muốn ăn nhanh để tiết kiệm thời gian và làm việc khác. Bạn có xu hướng chủ động, không muốn bỏ lỡ các công việc quan trọng, không ngại thử thách nhưng đôi khi lại hơi vội vàng, dễ mắc lỗi.</p>
+          
+          <h2>3. Dùng dao và nĩa để ăn pizza: Nhóm người hỗ trợ, thân thiện và nhiệt tình</h2>
+          <p>Thay vì dùng tay cầm pizza, kiểu người này thích dùng dao và nĩa để ăn bánh. Nếu có cách ăn như vậy, bạn là tuýp người hỗ trợ, thân thiện và nhiệt tình. Bạn thích sự yên tĩnh, làm mọi thứ một cách cẩn thận và không vội vàng. Hơn nữa, bạn còn là người luôn tạo cảm giác yên tâm cho người khác, chu đáo, tỉ mỉ và tốt với mọi người xung quanh. Ngoài ra, bạn còn khá trung thành với một phong cách hoặc sở thích và ít khi thay đổi.</p>
+          <div class="description-image">
+            <img src="https://plus.unsplash.com/premium_photo-1680303989900-b4b002b520c5?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Dùng dao và nĩa để ăn pizza">
+            <p class="image-caption">Người dùng dao và nĩa khi ăn pizza có tính cách tỉ mỉ, thích chia sẻ và quan tâm đến mọi người.</p>
+          </div>
+          
+          <h2>4. Cắn từ phần đầu nhọn của miếng bánh: Nhóm người cầu toàn, tỉ mỉ</h2>
+          <p>Ăn pizza bằng cách cắn từ phần nhân phía trên bánh trước - nơi có phần topping vừa phải là cách thưởng thức pizza thường thấy ở nhiều người. Đây là cách ăn khá đơn giản, thể hiện sự thoải mái và không cần cầu kỳ, phức tạp. Nếu là người thích ăn pizza từ phần đầu miếng bánh, bạn là tuýp người điềm tĩnh, cầu toàn và có nguyên tắc.</p>
+          <p>Bạn làm mọi thứ theo một trình tự nhất định, không vội vã và luôn thẳng thắn trong các vấn đề. Thêm nữa, bạn cũng rất kiên định, luôn theo đuổi những thứ mà mình quen thuộc và ít khi thể hiện sự phá cách, liều lĩnh.</p>
+          <div class="description-image">
+            <img src="https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?q=80&w=1450&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Pizza với vị ngon chuẩn vị Mỹ">
+            <p class="image-caption">Pizza với vị ngon chuẩn vị Mỹ, chinh phục khẩu vị của đông đảo khách hàng.</p>
+          </div>
+          
+          <p class="description-footer">Bài viết trên là những chia sẻ về 4 tính cách qua cách ăn pizza ở mỗi người. Vậy còn bạn, bạn thường ăn pizza theo cách nào? Hãy thử kiểm tra xem tính cách của mình là gì nhé.</p>
+        </div>
+      </div>
+      
+ 
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

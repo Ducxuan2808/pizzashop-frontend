@@ -1,0 +1,186 @@
+<app-header></app-header>
+
+<div class="profile-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-container">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Tài khoản</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <div class="row">
+      <!-- Left Sidebar -->
+      <div class="col-lg-3 col-md-4">
+        <div class="account-sidebar">
+          <div class="user-welcome">
+            <span class="account-icon"><i class="fas fa-user-circle"></i></span>
+            <div class="welcome-text">
+              <p>TRANG TÀI KHOẢN</p>
+              <p class="welcome-name">Xin chào, <span class="user-name">{{ user.fullName }}</span>!</p>
+            </div>
+          </div>
+          
+          <div class="account-menu">
+            <ul>
+              <li class="active"><a routerLink="/account"><i class="fas fa-user"></i> Thông tin tài khoản</a></li>
+              <li><a routerLink="/account/orders"><i class="fas fa-shopping-bag"></i> Đơn hàng của bạn</a></li>
+              <li><a routerLink="/account/changepassword"><i class="fas fa-lock"></i> Đổi mật khẩu</a></li>
+               <li><a href="#" class="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Content -->
+      <div class="col-lg-9 col-md-8">
+        <div class="profile-container">
+          <h2 class="page-title">Thông tin tài khoản</h2>
+          
+          <!-- User Profile Form -->
+          <div class="profile-form-container">
+            <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+              <div class="form-section">
+                <h3 class="section-title">Thông tin cá nhân</h3>
+                
+                <div class="form-group">
+                  <label for="fullName">Họ và tên <span class="required">*</span></label>
+                  <input type="text" id="fullName" class="form-control" formControlName="fullName">
+                  <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" class="error-message">
+                    Vui lòng nhập họ tên
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="email">Email <span class="required">*</span></label>
+                  <input type="email" id="email" class="form-control" formControlName="email">
+                  <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="error-message">
+                    Vui lòng nhập email hợp lệ
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="phone">Số điện thoại <span class="required">*</span></label>
+                  <input type="tel" id="phone" class="form-control" formControlName="phone">
+                  <div *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" class="error-message">
+                    Vui lòng nhập số điện thoại hợp lệ
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Submit Button -->
+              <div class="form-actions">
+                <button type="submit" class="btn-save" [disabled]="profileForm.invalid">Cập nhật</button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- Address Section -->
+          <div class="address-section">
+            <div class="section-header">
+              <h3 class="section-title">Địa chỉ của tôi</h3>
+              
+            </div>
+            
+            <div class="address-list">
+              <div class="address-item" *ngFor="let address of addresses; let i = index">
+                <div class="address-content">
+                  <div class="address-label" *ngIf="address.isDefault">
+                    <span class="default-badge">Mặc định</span>
+                  </div>
+                  
+                  <div class="recipient-info">
+                    <span class="recipient-name">{{ address.recipientName }}</span>
+                    <span class="separator">|</span>
+                    <span class="recipient-phone">{{ address.phone }}</span>
+                  </div>
+                  
+                  <p class="address-text">{{ address.fullAddress }}</p>
+                  
+                  <div class="address-action">
+                    <button class="btn-edit" (click)="openAddressPopup(i)">Chỉnh sửa</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Address Edit Popup -->
+<div class="address-popup" *ngIf="showAddressPopup">
+  <div class="popup-content">
+    <div class="popup-header">
+      <h3>Chỉnh sửa địa chỉ</h3>
+      <button class="close-btn" (click)="closeAddressPopup()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="popup-body">
+      <form [formGroup]="addressForm">
+        <div class="form-row">
+          <div class="form-group col-2">
+            <label for="recipientName">Họ và tên <span class="required">*</span></label>
+            <input type="text" id="recipientName" class="form-control" formControlName="recipientName">
+            <div *ngIf="addressForm.get('recipientName')?.invalid && addressForm.get('recipientName')?.touched" class="error-message">
+              Vui lòng nhập họ tên
+            </div>
+          </div>
+          
+          <div class="form-group col-2">
+            <label for="phone">Số điện thoại <span class="required">*</span></label>
+            <input type="tel" id="phone" class="form-control" formControlName="phone">
+            <div *ngIf="addressForm.get('phone')?.invalid && addressForm.get('phone')?.touched" class="error-message">
+              Vui lòng nhập số điện thoại hợp lệ
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="fullAddress">Địa chỉ đầy đủ <span class="required">*</span></label>
+          <textarea id="fullAddress" class="form-control" rows="3" formControlName="fullAddress" placeholder="Vui lòng nhập đầy đủ địa chỉ (bao gồm số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)"></textarea>
+          <div *ngIf="addressForm.get('fullAddress')?.invalid && addressForm.get('fullAddress')?.touched" class="error-message">
+            Vui lòng nhập địa chỉ đầy đủ
+          </div>
+        </div>
+        
+        <div class="form-group form-check">
+          <input type="checkbox" id="isDefault" class="form-check-input" formControlName="isDefault">
+          <label for="isDefault" class="form-check-label">Đặt làm địa chỉ mặc định</label>
+        </div>
+      </form>
+    </div>
+    
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="closeAddressPopup()">Hủy</button>
+      <button class="btn-save" (click)="saveAddress()" [disabled]="addressForm.invalid">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<div class="alert-container" *ngIf="showAlert">
+  <div class="alert" [ngClass]="{'alert-success': alertType === 'success', 'alert-danger': alertType === 'error'}">
+    <div class="alert-content">
+      <span class="alert-icon">
+        <i *ngIf="alertType === 'success'" class="fas fa-check-circle"></i>
+        <i *ngIf="alertType === 'error'" class="fas fa-exclamation-circle"></i>
+      </span>
+      <span class="alert-message">{{ alertMessage }}</span>
+    </div>
+    <button class="close-btn" (click)="closeAlert()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<app-footer></app-footer>
