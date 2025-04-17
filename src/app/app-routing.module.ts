@@ -11,6 +11,10 @@ import { LoginComponent } from "./components/login/login.component";
 import { CartComponent } from "./components/cart/cart.component";
 import { TablebookingComponent } from "./components/tablebooking/tablebooking.component";
 import { OrderComponent } from "./components/order/order.component";
+import { LienheComponent } from "./components/lienhe/lienhe.component";
+import { QuestionComponent } from "./components/question/question.component";
+import { TintucComponent } from "./components/tintuc/tintuc.component";
+import { GioithieuComponent } from "./components/gioithieu/gioithieu.component";
 
 const routes: Routes = [
     {path: '', component: HomeComponent},
@@ -23,7 +27,11 @@ const routes: Routes = [
     {path: 'changepassword', component: ChangepasswordComponent},
     {path: 'myorder', component: MyOrderComponent},
     {path: 'tablebooking', component: TablebookingComponent},
-    {path: 'order', component: OrderComponent}
+    {path: 'order', component: OrderComponent},
+    {path: 'tintuc', component: TintucComponent},
+    {path: 'question', component: QuestionComponent},
+    {path: 'lienhe', component: LienheComponent},
+    {path: 'gioithieu', component: GioithieuComponent}
     
 ];
 

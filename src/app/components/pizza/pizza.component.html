@@ -129,19 +129,19 @@
           <div class="col-md-4 mb-4" *ngFor="let pizza of pizzas">
             <div class="pizza-card">
               <div class="pizza-image">
-                <a href="javascript:void(0)" (click)="onProductClick(pizza.id)">
-                  <img [src]="pizza.url" [alt]="pizza.title" class="img-fluid">
+                <a href="javascript:void(0)" (click)="onPizzaClick(pizza.id)">
+                  <img [src]="pizza.url" [alt]="pizza.name" class="img-fluid">
                 </a>
               </div>
               <div class="pizza-info">
                 <h3 class="pizza-title">
-                  <a href="javascript:void(0)" (click)="onProductClick(pizza.id)">{{ pizza.title }}</a>
+                  <a href="javascript:void(0)" (click)="onPizzaClick(pizza.id)">{{ pizza.name }}</a>
                 </h3>
                 <p class="pizza-description">
                   {{ pizza.description.length > 100 ? (pizza.description.substring(0, 100) + '...') : pizza.description }}
                 </p>
                 <div class="pizza-price">Giá chỉ từ {{ formatPrice(pizza.base_price) }}</div>
-                <button class="btn-add-to-cart" (click)="openPopup(pizza)">Thêm</button>
+                <button class="btn-add-to-cart" (click)="openPopup(pizza); $event.stopPropagation()">Thêm</button>
               </div>
             </div>
           </div>
@@ -210,7 +210,10 @@
                      [checked]="selectedSizeId === size.id"
                      (change)="selectSize(size.id)">
               <label [for]="'size-' + size.id">
-                {{ size.size_name }} <span *ngIf="size.price_multiplier > 1">(+{{ formatPrice(selectedPizza.base_price * (size.price_multiplier - 1)) }})</span>
+                {{ size.size_name }} 
+                <span *ngIf="size.price_multiplier > 1">
+                  (+{{ formatPrice(selectedPizza ? (selectedPizza.base_price * (size.price_multiplier - 1)) : 0) }})
+                </span>
               </label>
             </div>
           </div>

@@ -113,7 +113,7 @@
         <div class="row g-4">
             <!-- Menu Item 1 -->
             <div class="col-md-6 col-lg-3" *ngFor="let pizza of pizzas">
-                <div class="card h-100">
+                <div class="card h-100" (click)="onPizzaClick(pizza.id)" style="cursor: pointer;">
                     <div class="position-relative">
                         <img [src]="pizza.url" class="card-img-top" [alt]="pizza.name">
                         <span class="badge bg-danger position-absolute top-0 end-0 m-2">Bán chạy</span>
@@ -122,8 +122,8 @@
                         <h5 class="card-title">{{pizza.name}}</h5>
                         <p class="card-text">{{pizza.description}}</p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="text-danger fw-bold mb-0">{{(pizza.base_price)}}</h5>
-                            <button class="btn btn-outline-danger rounded-pill">
+                            <h5 class="text-danger fw-bold mb-0">{{(pizza.base_price) | number}}đ</h5>
+                            <button class="btn btn-outline-danger rounded-pill" (click)="openPopup(pizza); $event.stopPropagation()">
                                 <i class="fas fa-shopping-cart me-1"></i> Thêm
                             </button>
                         </div>
@@ -393,5 +393,95 @@
         </div>
     </div>
 </section>
+
+<!-- Pizza Selection Popup -->
+<div class="popup-overlay" *ngIf="popupVisible" (click)="closePopup()">
+  <div class="popup-content" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h3>{{ selectedPizza?.name }}</h3>
+      <button class="close-btn" (click)="closePopup()">&times;</button>
+    </div>
+    
+    <div class="popup-body" *ngIf="selectedPizza">
+      <div class="popup-product-info">
+        <div class="popup-product-image">
+          <img [src]="selectedPizza.url" [alt]="selectedPizza.name">
+        </div>
+        <div class="popup-product-details">
+          <h4>{{ selectedPizza.name }}</h4>
+          <p>{{ selectedPizza.description }}</p>
+          <div class="popup-product-price">Giá: {{ formatPrice(selectedPizzaPrice) }}</div>
+        </div>
+      </div>
+      
+      <div class="popup-options">
+        <!-- Size Selection -->
+        <div class="option-section">
+          <h5>Kích thước</h5>
+          <div class="option-list">
+            <div class="option-item" *ngFor="let size of sizes">
+              <input type="radio" 
+                     [id]="'size-' + size.id" 
+                     name="pizza-size" 
+                     [value]="size.id" 
+                     [checked]="selectedSizeId === size.id"
+                     (change)="selectSize(size.id)">
+              <label [for]="'size-' + size.id">
+                {{ size.size_name }} <span *ngIf="size.price_multiplier > 1">(+{{ formatPrice(selectedPizza.base_price * (size.price_multiplier - 1)) }})</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Crust Selection -->
+        <div class="option-section">
+          <h5>Loại đế</h5>
+          <div class="option-list">
+            <div class="option-item" *ngFor="let type of types">
+              <input type="radio" 
+                     [id]="'crust-' + type.id" 
+                     name="pizza-crust" 
+                     [value]="type.id" 
+                     [checked]="selectedTypeId === type.id"
+                     (change)="selectType(type.id)">
+              <label [for]="'crust-' + type.id">
+                {{ type.base_name }} <span *ngIf="type.price > 0">(+{{ formatPrice(type.price) }})</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="option-section">
+          <h5>Ghi chú</h5>
+          <textarea [value]="orderNote" 
+                    (input)="updateOrderNote($event)" 
+                    class="form-control" 
+                    placeholder="Ghi chú thêm cho món ăn (tùy chọn)"></textarea>
+        </div>
+        
+        <!-- Quantity -->
+        <div class="option-section">
+          <h5>Số lượng</h5>
+          <div class="quantity-control">
+            <button class="btn-quantity btn-decrease" (click)="decreaseQuantity()">-</button>
+            <span class="quantity-value">{{ quantity }}</span>
+            <button class="btn-quantity btn-increase" (click)="increaseQuantity()">+</button>
+          </div>
+        </div>
+        
+        <!-- Total Price -->
+        <div class="total-price">
+          <h5>Tổng cộng: {{ formatPrice(selectedPizzaPrice * quantity) }}</h5>
+        </div>
+      </div>
+    </div>
+    
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="closePopup()">Hủy</button>
+      <button class="btn-add-to-cart" (click)="addToCart()">Thêm vào giỏ hàng</button>
+    </div>
+  </div>
+</div>
 
 <app-footer></app-footer>  

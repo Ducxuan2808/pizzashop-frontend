@@ -63,7 +63,7 @@
             <div class="icon-circle-bg">
               <i class="fas fa-shopping-cart text-warning fs-5"></i>
             </div>
-            <span class="badge bg-danger position-absolute badge-position p-1 rounded-circle">15</span>
+            <span *ngIf="cartItemCount > 0" class="badge bg-danger position-absolute badge-position p-1 rounded-circle">{{ cartItemCount }}</span>
           </button>
           
           <!-- Cart Popup -->
@@ -72,55 +72,42 @@
               <h5 class="m-0">Giỏ hàng của bạn</h5>
             </div>
             
-            <!-- Cart Items - Show this when cart has items -->
-            <div class="cart-body">
-              <!-- Sample Item 1 -->
-              <div class="cart-item">
-                <div class="item-image">
-                  <img src="assets/image/pizza1.jpg" alt="Pizza">
-                </div>
-                <div class="item-details">
-                  <div class="item-name">Pizza Chả Giò</div>
-                  <div class="item-options">Size 9 inch / Đế dày</div>
-                  <div class="item-price">89.000₫</div>
-                </div>
-                <div class="item-quantity">
-                  <button class="quantity-btn minus" onclick="updateCartQuantity(this, -1)">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <input type="number" class="quantity-input" value="5" min="1" max="50" onchange="updateCartTotal()" data-price="89000">
-                  <button class="quantity-btn plus" onclick="updateCartQuantity(this, 1)">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-                <div class="item-delete">
-                  <button class="delete-btn">
-                    <i class="fas fa-trash-alt"></i> Xóa
-                  </button>
-                </div>
+            <!-- Loading state -->
+            <div *ngIf="isCartLoading" class="cart-loading">
+              <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Loading...</span>
               </div>
-              
-              <!-- Sample Item 2 -->
-              <div class="cart-item">
+              <p>Đang tải giỏ hàng...</p>
+            </div>
+            
+            <!-- Cart Items - Show this when cart has items -->
+            <div *ngIf="!isCartLoading && cartItems.length > 0" class="cart-body">
+              <div *ngFor="let item of cartItems" class="cart-item">
                 <div class="item-image">
-                  <img src="assets/image/pizza2.jpg" alt="Pizza">
+                  <img 
+                    [src]="item.pizza?.url || 'assets/image/placeholder-pizza.jpg'" 
+                    [alt]="item.pizza?.name || 'Pizza'"
+                    (error)="handleImageError($event)"
+                    class="pizza-img">
                 </div>
                 <div class="item-details">
-                  <div class="item-name">Pizza Gà Nướng Dứa</div>
-                  <div class="item-options">Size 6 inch / Đế xốp</div>
-                  <div class="item-price">159.000₫</div>
+                  <div class="item-name">{{ item.pizza?.name || 'Pizza' }}</div>
+                  <div class="item-options">
+                    {{ item.size?.size_name || '?' }} / {{ item.type?.base_name || '?' }}
+                  </div>
+                  <div class="item-price">{{ formatPrice(item.price) }}</div>
                 </div>
                 <div class="item-quantity">
-                  <button class="quantity-btn minus" onclick="updateCartQuantity(this, -1)">
+                  <button class="quantity-btn minus" (click)="updateCartItemQuantity(item, -1)">
                     <i class="fas fa-minus"></i>
                   </button>
-                  <input type="number" class="quantity-input" value="1" min="1" max="50" onchange="updateCartTotal()" data-price="159000">
-                  <button class="quantity-btn plus" onclick="updateCartQuantity(this, 1)">
+                  <input type="number" class="quantity-input" [(ngModel)]="item.quantity" min="1" max="50" readonly>
+                  <button class="quantity-btn plus" (click)="updateCartItemQuantity(item, 1)">
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
                 <div class="item-delete">
-                  <button class="delete-btn">
+                  <button class="delete-btn" (click)="removeCartItem(item)">
                     <i class="fas fa-trash-alt"></i> Xóa
                   </button>
                 </div>
@@ -128,26 +115,31 @@
             </div>
             
             <!-- Empty Cart - Show this when cart is empty -->
-            <!--
-            <div class="cart-empty">
+            <div *ngIf="!isCartLoading && cartItems.length === 0" class="cart-empty">
               <i class="fas fa-shopping-basket"></i>
               <p>Không có sản phẩm nào trong giỏ hàng</p>
             </div>
-            -->
             
             <div class="cart-footer">
               <div class="cart-total">
                 <span>Tổng tiền:</span>
-                <span class="total-price" id="cartTotalPrice">584.000₫</span>
+                <span class="total-price">{{ formatPrice(cartTotal) }}</span>
               </div>
-              <a href="/checkout" class="btn-checkout">Thanh toán</a>
+              <div class="cart-actions">
+                <button *ngIf="cartItems.length > 0" class="btn-clear-cart" (click)="clearCart()">
+                  <i class="fas fa-trash"></i> Xóa tất cả
+                </button>
+                <a [routerLink]="['/checkout']" class="btn-checkout" [class.disabled]="cartItems.length === 0">
+                  Thanh toán
+                </a>
+              </div>
             </div>
           </div>
         </div>
   
         <!-- Buttons -->
-        <button class="btn btn-danger rounded-pill px-3">Đặt món online</button>
-        <button class="btn btn-danger rounded-pill px-3">Đặt bàn</button>
+        <button class="btn btn-danger rounded-pill px-3" routerLink="/pizzas">Đặt món online</button>
+        <button class="btn btn-danger rounded-pill px-3" routerLink="/tablebooking">Đặt bàn</button>
       </div>
     </div>
   
@@ -160,13 +152,13 @@
   
         <div class="collapse navbar-collapse" id="mainNavbar">
           <ul class="navbar-nav mx-auto mb-2 mb-lg-0 justify-content-between">
-            <li class="nav-item"><a class="nav-link" href="#">Trang chủ</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Giới thiệu</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Sản phẩm</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Tin tức</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Liên hệ</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Câu hỏi thường gặp</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Đặt bàn</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/gioithieu" routerLinkActive="active">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/pizzas" routerLinkActive="active">Sản phẩm</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/tintuc" routerLinkActive="active">Tin tức</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/lienhe" routerLinkActive="active">Liên hệ</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/question" routerLinkActive="active">Câu hỏi thường gặp</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/tablebooking" routerLinkActive="active">Đặt bàn</a></li>
           </ul>
         </div>
       </div>

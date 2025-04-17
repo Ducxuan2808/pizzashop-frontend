@@ -27,6 +27,10 @@ import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { ProfileComponent } from './components/account/profile/profile.component';
 import { PizzaDetailComponent } from './components/pizza-detail/pizza-detail.component';
+import { GioithieuComponent } from './components/gioithieu/gioithieu.component';
+import { TintucComponent } from './components/tintuc/tintuc.component';
+import { QuestionComponent } from './components/question/question.component';
+import { LienheComponent } from './components/lienhe/lienhe.component';
 
 
 @NgModule({
@@ -49,6 +53,10 @@ import { PizzaDetailComponent } from './components/pizza-detail/pizza-detail.com
 
     ProfileComponent,
      PizzaDetailComponent,
+     GioithieuComponent,
+     TintucComponent,
+     QuestionComponent,
+     LienheComponent,
      
   ],
   imports: [

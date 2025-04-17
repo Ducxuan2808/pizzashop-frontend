@@ -8,7 +8,7 @@
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
           <li class="breadcrumb-item"><a routerLink="/pizza">Pizza</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+          <li class="breadcrumb-item active" aria-current="page">{{ pizza.name }}</li>
         </ol>
       </nav>
     </div>
@@ -16,17 +16,30 @@
 
   <!-- Product Detail -->
   <div class="container">
-    <div class="product-detail">
+    <!-- Loading indicator -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Đang tải thông tin pizza...</p>
+    </div>
+    
+    <!-- Error message -->
+    <div *ngIf="error" class="error-container">
+      <div class="alert alert-danger">
+        {{ error }}
+      </div>
+    </div>
+    
+    <div class="product-detail" *ngIf="!isLoading && !error">
       <div class="row">
         <!-- Product Images -->
         <div class="col-lg-6">
           <div class="product-images">
             <div class="product-image-main">
-              <img [src]="product.image" [alt]="product.name" class="main-image">
+              <img [src]="pizza.url" [alt]="pizza.name" class="main-image">
               <div class="product-labels">
-                <span class="label-status" *ngIf="product.inStock">Còn hàng</span>
-                <span class="label-status out-of-stock" *ngIf="!product.inStock">Hết hàng</span>
-                <span class="label-sale" *ngIf="product.discountPercent > 0">-{{ product.discountPercent }}%</span>
+                <span class="label-status">Còn hàng</span>
               </div>
             </div>
           </div>
@@ -35,11 +48,10 @@
         <!-- Product Info -->
         <div class="col-lg-6">
           <div class="product-info">
-            <h1 class="product-name">{{ product.name }}</h1>
+            <h1 class="product-name">{{ pizza.name }}</h1>
             
             <div class="product-pricing">
-              <div class="current-price">{{ selectedPrice | currency:'VND':'symbol':'1.0-0' }}</div>
-              <div class="old-price" *ngIf="product.discountPercent > 0">{{ originalPrice | currency:'VND':'symbol':'1.0-0' }}</div>
+              <div class="current-price">{{ calculateTotalPrice() | currency:'VND':'symbol':'1.0-0' }}</div>
             </div>
 
 
@@ -51,12 +63,12 @@
                 <h4 class="option-title">Kích cỡ</h4>
                 <div class="option-items">
                   <div 
-                    *ngFor="let size of sizes" 
+                    *ngFor="let size of (pizza.sizes && pizza.sizes.length > 0 ? pizza.sizes : sizes)" 
                     class="option-item" 
-                    [class.active]="selectedSizeId === size.id" 
-                    (click)="selectSize(size.id)">
-                    <span class="option-name">{{ size.name }}</span>
-                    <span class="option-price" *ngIf="size.extraPrice > 0">+{{ size.extraPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+                    [class.active]="selectedSize && selectedSize.id === size.id" 
+                    (click)="selectSize(size)">
+                    <span class="option-name">{{ size.size_name }}</span>
+                    <span class="option-price" *ngIf="size.price_multiplier > 1">+{{ (pizza.base_price * (size.price_multiplier - 1)) | currency:'VND':'symbol':'1.0-0' }}</span>
                   </div>
                 </div>
               </div>
@@ -66,12 +78,12 @@
                 <h4 class="option-title">Đế bánh</h4>
                 <div class="option-items">
                   <div 
-                    *ngFor="let type of crustTypes" 
+                    *ngFor="let type of (pizza.crusts && pizza.crusts.length > 0 ? pizza.crusts : types)" 
                     class="option-item" 
-                    [class.active]="selectedCrustTypeId === type.id" 
-                    (click)="selectCrustType(type.id)">
-                    <span class="option-name">{{ type.name }}</span>
-                    <span class="option-price" *ngIf="type.extraPrice > 0">+{{ type.extraPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+                    [class.active]="selectedType && selectedType.id === type.id" 
+                    (click)="selectType(type)">
+                    <span class="option-name">{{ type.base_name }}</span>
+                    <span class="option-price" *ngIf="type.price > 0">+{{ type.price | currency:'VND':'symbol':'1.0-0' }}</span>
                   </div>
                 </div>
               </div>
@@ -87,10 +99,9 @@
                   <input 
                     type="number" 
                     class="quantity-input" 
-                    [value]="quantity" 
+                    [(ngModel)]="quantity" 
                     min="1" 
-                    max="50"
-                    (change)="onQuantityChange($event)">
+                    max="50">
                   <button 
                     class="quantity-btn" 
                     [disabled]="quantity >= 50"
@@ -104,7 +115,8 @@
                 <textarea 
                   class="note-input" 
                   placeholder="Ghi chú đặc biệt cho món ăn này..." 
-                  [(ngModel)]="orderNote"
+                  [value]="orderNote"
+                  (input)="updateOrderNote($event)"
                   rows="3"></textarea>
               </div>
             </div>
@@ -113,7 +125,6 @@
             <div class="product-actions">
               <button 
                 class="add-to-cart-btn" 
-                [disabled]="!product.inStock"
                 (click)="addToCart()">
                 Thêm vào giỏ hàng
               </button>
@@ -126,7 +137,7 @@
       <div class="product-description">
         <h3 class="description-title">Mô tả món ăn</h3>
         <div class="description-content">
-          <p>Bánh Pizza xúc xích cay kiểu Ý trên nền sốt cà chua mang lại hương vị trộn lẫn giữa cay cay và chua chua.</p>
+          <p>{{pizza.description}}</p>
           
           <h2>1. Ăn vỏ bánh trước tiên: Nhóm người tạo ảnh hưởng, thích sự khác biệt</h2>
           <p>Đây là kiểu người thường bắt đầu ăn pizza bằng cách cắn phần vỏ bánh trước, sau đó mới ăn đến phần nhân (ăn phần rìa của bánh pizza trước). Cách ăn này khá "lạ", không giống với đa số mọi người nên đôi khi bạn sẽ bắt gặp những ánh mắt ngạc nhiên nhìn mình đấy.</p>

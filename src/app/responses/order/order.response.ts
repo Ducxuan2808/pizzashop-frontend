@@ -3,9 +3,9 @@ import { OrderDetail } from "../../model/order.detail";
 export interface OrderResponse{
     id: number;
     user_id: number;
-    fullname: string; 
+    full_name: string; 
     email: string;
-    phone_number: string; 
+    phone: string; 
     address: string;
     note: string;
     order_date: Date; 
@@ -17,5 +17,5 @@ export interface OrderResponse{
     tracking_number: string; 
     payment_method: string; 
     active: boolean;
-    order_details: OrderDetail[]; 
+    order_details: OrderDetail[];
 }

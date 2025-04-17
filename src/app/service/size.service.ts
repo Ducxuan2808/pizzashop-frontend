@@ -18,8 +18,8 @@ export class SizeService{
         debugger
         return this.http.get<Size[]>(this.apiGetSizes);
     }
-    updateSizeDetail(pizzaId:number){
-        return this.http.get(`${environment.apiBaseUrl}/pizzas/${pizzaId}`);
+    updateSizeDetail(sizeId:number){
+        return this.http.get(`${environment.apiBaseUrl}/sizes/${sizeId}`);
     }
     getSizesById(sizeId:number){
         return this.http.get<Pizza>(`${this.apiGetSizes}/${sizeId}`);

@@ -13,7 +13,7 @@ export class PizzaService{
 
     constructor(private http:HttpClient){}
 
-    getProducts(sortBy:string, minPrice:number, maxPrice:number, keyword:string,
+    getPizzas(sortBy:string, minPrice:number, maxPrice:number, keyword:string,
                 page:number,limit:number
     ):Observable<Pizza[]>{
         const params = new HttpParams()
@@ -25,10 +25,10 @@ export class PizzaService{
         .set('limit',limit.toString());
         return this.http.get<Pizza[]>(this.apiGetPizzas,{ params });
     }
-    getDetailProduct(pizzaId:number){
+    getDetailPizza(pizzaId:number){
         return this.http.get(`${environment.apiBaseUrl}/pizzas/${pizzaId}`);
     }
-    getProductsByIds(pizzaIds:number[]):Observable<Pizza[]>{
+    getPizzasByIds(pizzaIds:number[]):Observable<Pizza[]>{
         debugger
         const params = new HttpParams().set('ids', pizzaIds.join(','));
         return this.http.get<Pizza[]>(`${this.apiGetPizzas}/by-ids`,{params});

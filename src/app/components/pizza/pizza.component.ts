@@ -10,6 +10,7 @@ import { TypeService } from '../../service/type.service';
 import { HttpClient } from '@angular/common/http';
 import { SearchService } from '../../services/search.service';
 import { Subscription } from 'rxjs';
+import { CartService } from '../../service/cart.service';
 
 @Component({
   selector: 'app-pizza',
@@ -64,7 +65,8 @@ export class PizzaComponent implements OnInit, OnDestroy {
     private router: Router,
     private http: HttpClient,
     private searchService: SearchService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cartService: CartService
   ) {
     this.searchSubscription = this.searchService.currentKeyword.subscribe(keyword => {
       this.keyword = keyword;
@@ -138,7 +140,7 @@ export class PizzaComponent implements OnInit, OnDestroy {
 
   //sortBy can be : 'price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'
   getPizzas(sortBy: string, minPrice: number, maxPrice: number, keyword: string, currentPage: number, itemsPerPage: number) {
-    this.pizzaService.getProducts(sortBy, minPrice, maxPrice, keyword, currentPage, itemsPerPage).subscribe({
+    this.pizzaService.getPizzas(sortBy, minPrice, maxPrice, keyword, currentPage, itemsPerPage).subscribe({
       next: (response:any) =>{
         response.pizzas.forEach((pizza: Pizza) => { 
           pizza.url = `${environment.apiBaseUrl}/pizzas/images/${pizza.thumbnail}`;
@@ -251,28 +253,36 @@ export class PizzaComponent implements OnInit, OnDestroy {
 
   openPopup(pizza: Pizza): void {
     console.log('Opening popup for pizza:', pizza);
-    console.log('Available sizes:', this.sizes);
-    console.log('Available types:', this.types);
     
-    // Kiểm tra xem sizes và types đã được load chưa
+    // Check if sizes and types are loaded
     if (!this.sizes || this.sizes.length === 0) {
       console.warn('No sizes available');
+      this.getSizes(); // Try to load sizes if they're not available
       return;
     }
     
     if (!this.types || this.types.length === 0) {
       console.warn('No types available');
+      this.getTypes(); // Try to load types if they're not available
       return;
     }
     
+    // Set the selected pizza and default to the first size and type
     this.selectedPizza = pizza;
     this.selectedSizeId = this.sizes[0].id;
     this.selectedTypeId = this.types[0].id;
-    this.selectedPizzaPrice = this.getPriceByIds(pizza.id, this.selectedSizeId, this.selectedTypeId);
+    
+    // Calculate the price based on the selected options
+    this.selectedPizzaPrice = this.getPriceByIds(
+      pizza.id, 
+      this.selectedSizeId, 
+      this.selectedTypeId
+    );
+    
+    // Reset other options
     this.orderNote = '';
     this.quantity = 1;
     this.popupVisible = true;
-    console.log('Popup state:', this.popupVisible);
   }
 
   closePopup(): void {
@@ -331,18 +341,18 @@ export class PizzaComponent implements OnInit, OnDestroy {
   addToCart(): void {
     if (!this.selectedPizza) return;
     
-    const cartItem = {
-      id: this.selectedPizza.id,
-      name: this.selectedPizza.name,
-      size: this.sizes.find(size => size.id === this.selectedSizeId)?.size_name || '',
-      type: this.types.find(type => type.id === this.selectedTypeId)?.base_name || '',
-      quantity: this.quantity,
-      price: this.selectedPizzaPrice,
-      totalPrice: this.selectedPizzaPrice * this.quantity,
-      note: this.orderNote
-    };
+    const totalPrice = this.selectedPizzaPrice * this.quantity;
     
-    console.log('Adding to cart:', cartItem);
+    // Add to cart using CartService
+    this.cartService.addToCart(
+      this.selectedPizza.id,
+      this.selectedSizeId,
+      this.selectedTypeId,
+      this.quantity,
+      totalPrice
+    );
+    
+    alert('Sản phẩm đã được thêm vào giỏ hàng!');
     this.closePopup();
   }
 
@@ -357,5 +367,9 @@ export class PizzaComponent implements OnInit, OnDestroy {
     this.baseFilter = '';
     this.keyword = '';
     this.fetchPizzas();
+  }
+  onPizzaClick(pizzaId: number){
+    // Navigate to the pizza detail page
+    this.router.navigate(['/pizzas', pizzaId]);
   }
 }

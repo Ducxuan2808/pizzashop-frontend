@@ -1,27 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-
-interface Size {
-  id: number;
-  name: string;
-  extraPrice: number;
-}
-
-interface CrustType {
-  id: number;
-  name: string;
-  extraPrice: number;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  basePrice: number;
-  discountPercent: number;
-  image: string;
-  description: string;
-  inStock: boolean;
-}
+import { ActivatedRoute, Router } from '@angular/router';
+import { Pizza } from '../../model/pizza';
+import { Size } from '../../model/size';
+import { Type } from '../../model/type';
+import { CartService } from '../../service/cart.service';
+import { PizzaService } from '../../service/pizza.service';
+import { SizeService } from '../../service/size.service';
+import { TypeService } from '../../service/type.service';
+import { environment } from '../../environments/environments';
+import { PizzaImage } from '../../model/pizza.image';
 
 @Component({
   selector: 'app-pizza-detail',
@@ -30,117 +17,138 @@ interface Product {
   styleUrl: './pizza-detail.component.scss'
 })
 export class PizzaDetailComponent implements OnInit {
-  product: Product = {
-    id: 1,
-    name: 'Pizza Xúc Xích Ý',
-    basePrice: 139000,
-    discountPercent: 0,
-    image: 'assets/images/pizza-xuc-xich-y.jpg',
-    description: `
-      <p>Bánh Pizza xúc xích cay kiểu Ý trên nền sốt cà chua mang lại hương vị trộn lẫn giữa cay cay và chua chua.</p>
-      <h2>1. Ăn vỏ bánh trước tiên: Nhóm người tạo ảnh hưởng, thích sự khác biệt</h2>
-      <p>Đây là kiểu người thường bắt đầu ăn pizza bằng cách cắn phần vỏ bánh trước, sau đó mới ăn đến phần nhân (ăn phần rìa của bánh pizza trước). Cách ăn này khá "lạ", không giống với đa số mọi người nên đôi khi bạn sẽ bắt gặp những ánh mắt ngạc nhiên nhìn mình đấy.</p>
-      <p>Nếu thích ăn vỏ bánh pizza trước tiên thì bạn là kiểu người tạo ảnh hưởng, yêu thích sự khác biệt. Bạn không ngần ngại thể hiện cá tính, luôn làm mới bản thân, không giới hạn mình trong bất kỳ một khuôn khổ nào. Chưa kể bạn còn rất nhanh nhẹn, nắm bắt xu hướng nhanh chóng và thân thiện với mọi người.</p>
-    `,
-    inStock: true
-  };
-
-  sizes: Size[] = [
-    { id: 1, name: 'Nhỏ 6"', extraPrice: 0 },
-    { id: 2, name: 'Vừa 9"', extraPrice: 30000 },
-    { id: 3, name: 'Lớn 12"', extraPrice: 60000 }
-  ];
-
-  crustTypes: CrustType[] = [
-    { id: 1, name: 'Đế mỏng', extraPrice: 0 },
-    { id: 2, name: 'Đế dày', extraPrice: 10000 },
-    { id: 3, name: 'Đế giòn xốp', extraPrice: 15000 },
-    { id: 4, name: 'Đế viền phô mai', extraPrice: 25000 }
-  ];
-
-  relatedProducts: Product[] = [
-    {
-      id: 2,
-      name: 'Pizza Puff Gà BBQ Nướng Dứa',
-      basePrice: 89000,
-      discountPercent: 0,
-      image: 'assets/images/pizza-ga-bbq.jpg',
-      description: 'Gà nướng dứa cùng phô mai thơm béo và sốt Thousand Island.',
-      inStock: true
-    },
-    {
-      id: 3,
-      name: 'Pizza Chất Gà Nướng Dứa',
-      basePrice: 89000,
-      discountPercent: 0,
-      image: 'assets/images/pizza-ga-nuong-dua.jpg',
-      description: 'Hoà quyện vị giác với thịt gà nướng cùng với dứa và nhiều loại phô mai thượng hạng',
-      inStock: true
-    },
-    {
-      id: 4,
-      name: 'Pizza Chất Giăm Bông & Thịt Xông Khói',
-      basePrice: 89000,
-      discountPercent: 0,
-      image: 'assets/images/pizza-giam-bong.jpg',
-      description: 'Vị truyền thống với thịt xông khói và thịt nguội hoà trộn với cà chua, phô mai và sốt béo',
-      inStock: true
-    },
-    {
-      id: 5,
-      name: 'Pizza Thịt Nguội & Nấm',
-      basePrice: 139000,
-      discountPercent: 10,
-      image: 'assets/images/pizza-thit-nguoi.jpg',
-      description: 'Pizza giăm bông và nấm đem đến cho bạn những trải nghiệm thú vị.',
-      inStock: true
-    }
-  ];
-
-  selectedSizeId: number = 1;
-  selectedCrustTypeId: number = 1;
+  pizzaId!: number;
+  pizza!: Pizza;
+  isLoading: boolean = true;
+  error: string = '';
+  
+  selectedSize!: Size;
+  selectedType!: Type;
   quantity: number = 1;
   orderNote: string = '';
-  
-  // Derived values
-  get selectedSize(): Size {
-    return this.sizes.find(size => size.id === this.selectedSizeId) || this.sizes[0];
-  }
-  
-  get selectedCrustType(): CrustType {
-    return this.crustTypes.find(type => type.id === this.selectedCrustTypeId) || this.crustTypes[0];
-  }
-  
-  get selectedPrice(): number {
-    const basePrice = this.product.basePrice;
-    const discount = this.product.discountPercent > 0 ? (basePrice * this.product.discountPercent / 100) : 0;
-    const discountedPrice = basePrice - discount;
-    
-    return (discountedPrice + this.selectedSize.extraPrice + this.selectedCrustType.extraPrice) * this.quantity;
-  }
-  
-  get originalPrice(): number {
-    return (this.product.basePrice + this.selectedSize.extraPrice + this.selectedCrustType.extraPrice) * this.quantity;
-  }
 
-  constructor(private route: ActivatedRoute) { }
+  sizes: Size[] = [];
+  types: Type[] = [];
+  
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private pizzaService: PizzaService,
+    private cartService: CartService,
+    private sizeService: SizeService,
+    private typeService: TypeService
+  ) { }
 
   ngOnInit(): void {
-    // In a real app, we would fetch the product ID from the route
-    // and load the product data from an API
-    this.route.params.subscribe(params => {
-      const productId = +params['id'];
-      // Here we would call a service to get the product by ID
-      console.log('Loading product with ID:', productId);
+
+    // First load sizes and types
+    this.loadSizesAndTypes(() => {
+      // After sizes and types are loaded, get the pizza details
+      this.getPizza();
     });
   }
 
-  selectSize(sizeId: number): void {
-    this.selectedSizeId = sizeId;
+  loadSizesAndTypes(callback: () => void): void {
+    // Load sizes
+    this.sizeService.getSizes().subscribe({
+      next: (sizes: Size[]) => {
+        this.sizes = sizes;
+        console.log('Sizes loaded:', this.sizes);
+        
+        // Load types
+        this.typeService.getTypes().subscribe({
+          next: (types: Type[]) => {
+            this.types = types;
+            console.log('Types loaded:', this.types);
+            
+            // Both sizes and types loaded, call the callback
+            callback();
+          },
+          error: (error: any) => {
+            console.error('Error fetching types', error);
+            this.types = [];
+            callback(); // Still call callback to proceed
+          }
+        });
+      },
+      error: (error: any) => {
+        console.error('Error fetching sizes', error);
+        this.sizes = [];
+        callback(); // Still call callback to proceed
+      }
+    });
   }
 
-  selectCrustType(typeId: number): void {
-    this.selectedCrustTypeId = typeId;
+  getPizza(): void {
+    const idParam = this.activatedRoute.snapshot.paramMap.get('id');
+    if(idParam !== null) {
+      this.pizzaId = +idParam;
+    }
+    if(!isNaN(this.pizzaId)) {
+      this.isLoading = true;
+      this.error = '';
+      
+      this.pizzaService.getDetailPizza(this.pizzaId).subscribe({
+        next: (response: any) => {
+          // Process images if needed
+          if(response.pizza_images && response.pizza_images.length > 0) {
+            response.pizza_images.forEach((pizza_image: PizzaImage) => {
+              pizza_image.image_url = `${environment.apiBaseUrl}/pizzas/images/${pizza_image.image_url}`;
+            });
+          }
+          // Set URL for main image if not already set
+          if (!response.url) {
+            response.url = `${environment.apiBaseUrl}/pizzas/images/${response.thumbnail}`;
+          }
+          
+          this.pizza = response;
+          
+          // Set default selections from the first available size and type
+          this.setDefaultSelections();
+          
+          this.isLoading = false;
+        },
+        complete: () => {
+          console.log('Pizza detail fetch complete');
+        },
+        error: (error: any) => {
+          this.error = 'Failed to load pizza details. Please try again.';
+          this.isLoading = false;
+          console.error('Error fetching pizza detail:', error);
+        }
+      });
+    } else {
+      console.error('Invalid pizzaId:', idParam);
+      this.error = 'Invalid pizza ID provided.';
+    }
+  }
+
+  setDefaultSelections(): void {
+    // Set default size - first from pizza.sizes or from global sizes
+    if (this.pizza.sizes && this.pizza.sizes.length > 0) {
+      this.selectedSize = this.pizza.sizes[0];
+    } else if (this.sizes.length > 0) {
+      this.selectedSize = this.sizes[0];
+    }
+    
+    // Set default type - first from pizza.crusts or from global types
+    if (this.pizza.crusts && this.pizza.crusts.length > 0) {
+      this.selectedType = this.pizza.crusts[0];
+    } else if (this.types.length > 0) {
+      this.selectedType = this.types[0];
+    }
+  }
+
+  selectSize(size: Size): void {
+    this.selectedSize = size;
+    // Recalculate price when size changes
+    this.calculateTotalPrice();
+  }
+
+  selectType(type: Type): void {
+    this.selectedType = type;
+    // Recalculate price when type changes
+    this.calculateTotalPrice();
   }
 
   decreaseQuantity(): void {
@@ -155,39 +163,56 @@ export class PizzaDetailComponent implements OnInit {
     }
   }
 
-  onQuantityChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    let value = parseInt(target.value);
-    
-    if (isNaN(value) || value < 1) {
-      value = 1;
-    } else if (value > 50) {
-      value = 50;
+  updateOrderNote(event: any): void {
+    this.orderNote = event.target.value;
+  }
+
+  calculateTotalPrice(): number {
+    if (!this.pizza || !this.selectedSize || !this.selectedType) {
+      return 0;
     }
     
-    this.quantity = value;
-    target.value = value.toString();
+    return (this.pizza.base_price * this.selectedSize.price_multiplier + this.selectedType.price) * this.quantity;
   }
 
   addToCart(): void {
-    // In a real app, we would call a service to add the product to the cart
-    console.log('Adding to cart:', {
-      product: this.product,
-      size: this.selectedSize,
-      crustType: this.selectedCrustType,
-      quantity: this.quantity,
-      note: this.orderNote,
-      totalPrice: this.selectedPrice
-    });
+    if (!this.selectedSize || !this.selectedType) {
+      return;
+    }
     
-    // Show success message or navigate to cart page
-    alert('Sản phẩm đã được thêm vào giỏ hàng!');
+    const totalPrice = this.calculateTotalPrice();
+    
+    const cartItem = {
+      id: this.pizzaId,
+      name: this.pizza.name,
+      image: this.pizza.url,
+      size: {
+        id: this.selectedSize.id,
+        name: this.selectedSize.size_name,
+        price_multiplier: this.selectedSize.price_multiplier
+      },
+      type: {
+        id: this.selectedType.id,
+        name: this.selectedType.base_name,
+        price: this.selectedType.price
+      },
+      quantity: this.quantity,
+      price: totalPrice,
+      note: this.orderNote
+    };
+    
+    this.cartService.addToCart(
+      this.pizzaId,
+      this.selectedSize.id,
+      this.selectedType.id,
+      this.quantity,
+      totalPrice
+    );
+    
+    alert('Pizza added to cart successfully!');
   }
 
-  quickAdd(productId: number): void {
-    // In a real app, we would fetch the product details and show a popup
-    // or directly add the product to cart with default options
-    console.log('Quick adding product with ID:', productId);
-    alert(`Đã thêm sản phẩm ID ${productId} vào giỏ hàng!`);
+  goBack(): void {
+    this.router.navigate(['/pizzas']);
   }
 }

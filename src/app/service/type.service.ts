@@ -19,8 +19,8 @@ export class TypeService{
         debugger
         return this.http.get<Type[]>(this.apiGetTypes);
     }
-    updateSizeDetail(pizzaId:number){
-        return this.http.get(`${environment.apiBaseUrl}/types/${pizzaId}`);
+    updateSizeDetail(typeId:number){
+        return this.http.get(`${environment.apiBaseUrl}/types/${typeId}`);
     }
     getTypesById(typeId:number){
         return this.http.get<Pizza>(`${this.apiGetTypes}/${typeId}`);
