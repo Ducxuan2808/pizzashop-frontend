@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { SearchService } from '../../services/search.service';
+import { SearchService } from '../../service/search.service';
 import { CartService } from '../../service/cart.service';
 import { PizzaService } from '../../service/pizza.service';
 import { Pizza } from '../../model/pizza';
@@ -9,17 +9,17 @@ import { Type } from '../../model/type';
 import { SizeService } from '../../service/size.service';
 import { TypeService } from '../../service/type.service';
 import { environment } from '../../environments/environments';
+import { Subscription } from 'rxjs';
 
 interface CartItem {
-  key: string;
-  pizzaId: number;
-  sizeId: number;
-  typeId: number;
+  id: number;
+  name: string;
+  image?: string;
+  size: string;
+  type: string;
   quantity: number;
   price: number;
   pizza?: Pizza;
-  size?: Size;
-  type?: Type;
 }
 
 @Component({
@@ -28,7 +28,7 @@ interface CartItem {
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-export class HeaderComponent implements OnInit{
+export class HeaderComponent implements OnInit, OnDestroy {
   activeNavItem = 0;
   navItems = [
     { label: 'Trang chủ', link: '/' },
@@ -46,6 +46,7 @@ export class HeaderComponent implements OnInit{
   sizes: Size[] = [];
   types: Type[] = [];
   isCartLoading: boolean = true;
+  private cartSubscription: Subscription | null = null;
 
   constructor(
     private router: Router,
@@ -64,8 +65,19 @@ export class HeaderComponent implements OnInit{
     // Load sizes and types first, then load cart
     this.loadSizesAndTypes();
     
-    // Refresh cart whenever the component initializes
+    // Subscribe to cart updates
+    this.cartSubscription = this.cartService.cartUpdated.subscribe(() => {
+      this.loadCart();
+    });
+    
+    // Initial load
     this.loadCart();
+  }
+  
+  ngOnDestroy(): void {
+    if (this.cartSubscription) {
+      this.cartSubscription.unsubscribe();
+    }
   }
 
   private loadSizesAndTypes(): void {
@@ -97,10 +109,11 @@ export class HeaderComponent implements OnInit{
 
   private loadCart(): void {
     this.isCartLoading = true;
-    this.cartService.refreshCart(); // Ensure we have the latest cart data
     
-    const cart = this.cartService.getCart();
-    if (cart.size === 0) {
+    // Get cart items from service
+    const cartItems = this.cartService.getCartItems();
+    
+    if (cartItems.length === 0) {
       this.cartItems = [];
       this.cartTotal = 0;
       this.cartItemCount = 0;
@@ -108,13 +121,12 @@ export class HeaderComponent implements OnInit{
       return;
     }
     
-    // Extract pizza IDs from cart
-    const pizzaIds: number[] = Array.from(cart.values()).map(item => item.pizzaId);
-    const uniquePizzaIds = [...new Set(pizzaIds)]; // Remove duplicates
+    // Extract unique pizza IDs from cart items
+    const pizzaIds = [...new Set(cartItems.map(item => item.id))];
     
     // If there are pizzas in the cart, fetch their details
-    if (uniquePizzaIds.length > 0) {
-      this.pizzaService.getPizzasByIds(uniquePizzaIds).subscribe({
+    if (pizzaIds.length > 0) {
+      this.pizzaService.getPizzasByIds(pizzaIds).subscribe({
         next: (pizzas: Pizza[]) => {
           // Process pizzas to ensure they have image URLs
           pizzas.forEach(pizza => {
@@ -139,18 +151,12 @@ export class HeaderComponent implements OnInit{
             pizzaMap.set(pizza.id, pizza);
           });
           
-          // Convert the cart Map to an array of CartItems with pizza details
-          this.cartItems = Array.from(cart.entries()).map(([key, item]) => {
-            const pizza = pizzaMap.get(item.pizzaId);
-            const size = this.getSizeById(item.sizeId);
-            const type = this.getTypeById(item.typeId);
-            
+          // Enrich cart items with pizza details
+          this.cartItems = cartItems.map(item => {
+            const pizza = pizzaMap.get(item.id);
             return {
-              key,
               ...item,
-              pizza,
-              size,
-              type
+              pizza
             };
           });
           
@@ -160,6 +166,8 @@ export class HeaderComponent implements OnInit{
         },
         error: (error) => {
           console.error('Error fetching pizza details:', error);
+          this.cartItems = cartItems;
+          this.calculateCartTotals();
           this.isCartLoading = false;
         }
       });
@@ -180,49 +188,27 @@ export class HeaderComponent implements OnInit{
   }
 
   private calculateCartTotals(): void {
-    this.cartTotal = this.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    this.cartItemCount = this.cartItems.reduce((count, item) => count + item.quantity, 0);
+    this.cartTotal = this.cartService.getTotalPrice();
+    this.cartItemCount = this.cartService.getTotalItems();
   }
 
   public updateCartItemQuantity(item: CartItem, change: number): void {
     const newQuantity = item.quantity + change;
     if (newQuantity >= 1 && newQuantity <= 50) {
-      // Update the quantity in our local cart items array
-      item.quantity = newQuantity;
-      
-      // Update the cart Map and save to localStorage
-      const cart = this.cartService.getCart();
-      if (cart.has(item.key)) {
-        const cartItem = cart.get(item.key)!;
-        cartItem.quantity = newQuantity;
-        this.cartService.setCart(cart);
-      }
-      
-      // Recalculate totals
-      this.calculateCartTotals();
+      this.cartService.updateItemQuantity(item.id, newQuantity);
     }
   }
 
   public removeCartItem(item: CartItem): void {
-    // Remove from our local cart items array
-    this.cartItems = this.cartItems.filter(i => i.key !== item.key);
-    
-    // Remove from the cart Map and save to localStorage
-    const cart = this.cartService.getCart();
-    if (cart.has(item.key)) {
-      cart.delete(item.key);
-      this.cartService.setCart(cart);
-    }
-    
-    // Recalculate totals
-    this.calculateCartTotals();
+    this.cartService.removeItem(item.id);
   }
 
   public clearCart(): void {
     this.cartService.clearCart();
-    this.cartItems = [];
-    this.cartTotal = 0;
-    this.cartItemCount = 0;
+  }
+
+  navigateToCart(): void {
+    this.router.navigate(['/cart']);
   }
 
   onSearch(): void {

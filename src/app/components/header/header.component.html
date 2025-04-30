@@ -36,7 +36,7 @@
   
       
         <!-- User icon với dropdown -->
-    <div class="user-dropdown position-relative">
+    <div class="user-dropdown position-relative" routerLink="/profile">
         <div>
             <button class="btn icon-btn rounded-circle position-relative hover-scale">
                 <div class="icon-circle-bg">
@@ -59,7 +59,7 @@
   
         <!-- Cart icon -->         
         <div class="cart-wrapper position-relative">
-          <button class="btn icon-btn rounded-circle position-relative hover-scale">
+          <button class="btn icon-btn rounded-circle position-relative hover-scale" (click)="navigateToCart()">
             <div class="icon-circle-bg">
               <i class="fas fa-shopping-cart text-warning fs-5"></i>
             </div>
@@ -85,15 +85,15 @@
               <div *ngFor="let item of cartItems" class="cart-item">
                 <div class="item-image">
                   <img 
-                    [src]="item.pizza?.url || 'assets/image/placeholder-pizza.jpg'" 
-                    [alt]="item.pizza?.name || 'Pizza'"
+                    [src]="item.pizza?.url || item.image || 'assets/image/placeholder-pizza.jpg'" 
+                    [alt]="item.name || 'Pizza'"
                     (error)="handleImageError($event)"
                     class="pizza-img">
                 </div>
                 <div class="item-details">
-                  <div class="item-name">{{ item.pizza?.name || 'Pizza' }}</div>
+                  <div class="item-name">{{ item.name || 'Pizza' }}</div>
                   <div class="item-options">
-                    {{ item.size?.size_name || '?' }} / {{ item.type?.base_name || '?' }}
+                    {{ item.size || '?' }} / {{ item.type || '?' }}
                   </div>
                   <div class="item-price">{{ formatPrice(item.price) }}</div>
                 </div>
@@ -129,7 +129,7 @@
                 <button *ngIf="cartItems.length > 0" class="btn-clear-cart" (click)="clearCart()">
                   <i class="fas fa-trash"></i> Xóa tất cả
                 </button>
-                <a [routerLink]="['/checkout']" class="btn-checkout" [class.disabled]="cartItems.length === 0">
+                <a [routerLink]="['/cart']" class="btn-checkout" [class.disabled]="cartItems.length === 0">
                   Thanh toán
                 </a>
               </div>

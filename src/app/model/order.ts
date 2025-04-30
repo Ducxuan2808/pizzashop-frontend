@@ -5,6 +5,7 @@ export interface Order{
     user_id: number;
     fullname: string; 
     email: string;
+    phone_order: string;
     phone_number: string; 
     address: string;
     note: string;

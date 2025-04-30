@@ -1,27 +1,34 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environments';
-import { Pizza } from '../model/pizza';
-import { Size } from '../model/size';
 
 @Injectable({
     providedIn:'root'
 })
 
 export class SizeService{
-    private apiGetSizes = `${environment.apiBaseUrl}/sizes`;
+    private apiUrl = `${environment.apiBaseUrl}/sizes`;
 
     constructor(private http:HttpClient){}
 
-    getSizes():Observable<Size[]>{
-        debugger
-        return this.http.get<Size[]>(this.apiGetSizes);
+    getSizes(): Observable<any> {
+        return this.http.get<any>(this.apiUrl);
     }
-    updateSizeDetail(sizeId:number){
-        return this.http.get(`${environment.apiBaseUrl}/sizes/${sizeId}`);
+
+    getSizeById(id: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/${id}`);
     }
-    getSizesById(sizeId:number){
-        return this.http.get<Pizza>(`${this.apiGetSizes}/${sizeId}`);
+
+    createSize(size: any): Observable<any> {
+        return this.http.post<any>(this.apiUrl, size);
+    }
+
+    updateSize(id: number, size: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/${id}`, size);
+    }
+
+    deleteSize(id: number): Observable<any> {
+        return this.http.delete<any>(`${this.apiUrl}/${id}`);
     }
 }

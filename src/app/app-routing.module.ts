@@ -15,6 +15,12 @@ import { LienheComponent } from "./components/lienhe/lienhe.component";
 import { QuestionComponent } from "./components/question/question.component";
 import { TintucComponent } from "./components/tintuc/tintuc.component";
 import { GioithieuComponent } from "./components/gioithieu/gioithieu.component";
+import { PaymentCallbackComponent } from "./payment-callback/payment-callback.component";
+import { OrdersComponent } from "./components/admin/orders/orders.component";
+import { AdminPizzasComponent } from "./components/admin/admin-pizzas/admin-pizzas.component";
+import { AdminUsersComponent } from "./components/admin/admin-users/admin-users.component";
+import { ThongkeComponent } from "./components/admin/thongke/thongke.component";
+import { AdminTablebookingComponent } from "./components/admin/admin-tablebooking/admin-tablebooking.component";
 
 const routes: Routes = [
     {path: '', component: HomeComponent},
@@ -31,8 +37,15 @@ const routes: Routes = [
     {path: 'tintuc', component: TintucComponent},
     {path: 'question', component: QuestionComponent},
     {path: 'lienhe', component: LienheComponent},
-    {path: 'gioithieu', component: GioithieuComponent}
+    {path: 'gioithieu', component: GioithieuComponent},
+    {path: 'payments/payment-callback', component: PaymentCallbackComponent},
     
+    // Admin routes
+    {path: 'admin/orders', component: OrdersComponent},
+    {path: 'admin/pizzas', component: AdminPizzasComponent},
+    {path: 'admin/users', component: AdminUsersComponent},
+    {path: 'admin/statistics', component: ThongkeComponent},
+    {path: 'admin/tablebooking', component: AdminTablebookingComponent}
 ];
 
 @NgModule({

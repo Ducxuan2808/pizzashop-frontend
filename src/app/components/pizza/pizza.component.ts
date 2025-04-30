@@ -8,7 +8,7 @@ import { environment } from '../../environments/environments';
 import { SizeService } from '../../service/size.service';
 import { TypeService } from '../../service/type.service';
 import { HttpClient } from '@angular/common/http';
-import { SearchService } from '../../services/search.service';
+import { SearchService } from '../../service/search.service';
 import { Subscription } from 'rxjs';
 import { CartService } from '../../service/cart.service';
 
@@ -343,14 +343,24 @@ export class PizzaComponent implements OnInit, OnDestroy {
     
     const totalPrice = this.selectedPizzaPrice * this.quantity;
     
+    // Create cart item object
+    const selectedSize = this.sizes.find(s => s.id === this.selectedSizeId);
+    const selectedType = this.types.find(t => t.id === this.selectedTypeId);
+    
+    if (!selectedSize || !selectedType) return;
+    
+    const cartItem = {
+      id: this.selectedPizza.id,
+      name: this.selectedPizza.name,
+      image: this.selectedPizza.url,
+      size: selectedSize.size_name,
+      type: selectedType.base_name,
+      quantity: this.quantity,
+      price: totalPrice
+    };
+    
     // Add to cart using CartService
-    this.cartService.addToCart(
-      this.selectedPizza.id,
-      this.selectedSizeId,
-      this.selectedTypeId,
-      this.quantity,
-      totalPrice
-    );
+    this.cartService.addToCart(cartItem);
     
     alert('Sản phẩm đã được thêm vào giỏ hàng!');
     this.closePopup();

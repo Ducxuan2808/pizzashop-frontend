@@ -1,152 +1,167 @@
 <app-header></app-header>
 
-<div class="booking-page">
-  <!-- Breadcrumb -->
-  <div class="breadcrumb-container">
-    <div class="container">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Đặt bàn</li>
-        </ol>
-      </nav>
-    </div>
+<!-- Breadcrumb -->
+<div class="breadcrumb-container">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Đặt bàn</li>
+      </ol>
+    </nav>
   </div>
+</div>
 
-  <!-- Main Content -->
-  <div class="container mt-4">
-    <div class="booking-content">
-      <div class="row">
-        <!-- Booking Form -->
-        <div class="col-lg-7">
-          <div class="booking-form">
-            <h2 class="booking-title">Đặt bàn</h2>
-            <p class="booking-desc">Đặt bàn trước để được phục vụ tốt nhất tại PizZing</p>
+<section class="contact-section spad">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="booking-form">
+          <h3>Đặt Bàn Tại PizZing pizza</h3>
+          <p>Vui lòng điền đầy đủ thông tin để đặt bàn</p>
 
-            <form class="mt-4">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="fullName" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                  <input type="tel" class="form-control" id="phone" required>
-                </div>
-              </div>
-              
-              <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email">
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="bookingDate" class="form-label">Ngày đặt bàn <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control" id="bookingDate" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="bookingTime" class="form-label">Giờ đặt bàn <span class="text-danger">*</span></label>
-                  <div class="time-picker">
-                    <select class="form-control hour-select">
-                      <option value="">Giờ</option>
-                      <option value="08">08</option>
-                      <option value="09">09</option>
-                      <option value="10">10</option>
-                      <option value="11">11</option>
-                      <option value="12">12</option>
-                      <option value="13">13</option>
-                      <option value="14">14</option>
-                      <option value="15">15</option>
-                      <option value="16">16</option>
-                      <option value="17">17</option>
-                      <option value="18">18</option>
-                      <option value="19">19</option>
-                      <option value="20">20</option>
-                      <option value="21">21</option>
-                    </select>
-                    <span class="time-separator">:</span>
-                    <select class="form-control minute-select">
-                      <option value="">Phút</option>
-                      <option value="00">00</option>
-                      <option value="15">15</option>
-                      <option value="30">30</option>
-                      <option value="45">45</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="guestCount" class="form-label">Số lượng khách <span class="text-danger">*</span></label>
-                  <select class="form-control" id="guestCount" required>
-                    <option value="">Chọn số lượng</option>
-                    <option value="1">1 người</option>
-                    <option value="2">2 người</option>
-                    <option value="3-4">3-4 người</option>
-                    <option value="5-6">5-6 người</option>
-                    <option value="7-8">7-8 người</option>
-                    <option value="9+">9 người trở lên</option>
-                  </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="tableType" class="form-label">Loại bàn</label>
-                  <select class="form-control" id="tableType">
-                    <option value="">Chọn loại bàn</option>
-                    <option value="standard">Bàn tiêu chuẩn</option>
-                    <option value="window">Bàn view cửa sổ</option>
-                    <option value="private">Phòng riêng</option>
-                    <option value="outdoor">Bàn ngoài trời</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="mb-4">
-                <label for="note" class="form-label">Ghi chú</label>
-                <textarea class="form-control" id="note" rows="3" placeholder="Nhu cầu đặc biệt, yêu cầu về chỗ ngồi..."></textarea>
-              </div>
-
-              <button type="submit" class="btn-booking">Đặt bàn ngay</button>
-            </form>
+          <div *ngIf="success" class="alert alert-success">
+            <div [innerHTML]="successMessage"></div>
           </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+          </div>
+
+          <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="fullName">Họ và tên <span class="required">*</span></label>
+              <input type="text" id="fullName" formControlName="fullName" class="form-control" placeholder="Nhập họ và tên của bạn">
+              <div *ngIf="bookingForm.get('fullName')?.invalid && bookingForm.get('fullName')?.touched" class="text-danger">
+                <small *ngIf="bookingForm.get('fullName')?.errors?.['required']">Họ tên không được để trống</small>
+                <small *ngIf="bookingForm.get('fullName')?.errors?.['minlength']">Họ tên phải có ít nhất 3 ký tự</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Số điện thoại <span class="required">*</span></label>
+              <input type="tel" id="phone" formControlName="phone" class="form-control" placeholder="Nhập số điện thoại">
+              <div *ngIf="bookingForm.get('phone')?.invalid && bookingForm.get('phone')?.touched" class="text-danger">
+                <small *ngIf="bookingForm.get('phone')?.errors?.['required']">Số điện thoại không được để trống</small>
+                <small *ngIf="bookingForm.get('phone')?.errors?.['pattern']">Số điện thoại không hợp lệ (10-11 số)</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="bookingDate">Ngày đặt bàn <span class="required">*</span></label>
+              <input type="date" id="bookingDate" formControlName="bookingDate" class="form-control" [min]="getMinDate()" [max]="getMaxDate()">
+              <div *ngIf="bookingForm.get('bookingDate')?.invalid && bookingForm.get('bookingDate')?.touched" class="text-danger">
+                <small *ngIf="bookingForm.get('bookingDate')?.errors?.['required']">Ngày đặt bàn không được để trống</small>
+              </div>
+            </div>
+
+            <div class="form-group time-select">
+              <label>Giờ đặt bàn <span class="required">*</span></label>
+              <div class="row">
+                <div class="col-6">
+                  <select formControlName="bookingHour" class="form-control">
+                    <option value="" disabled selected>Giờ</option>
+                    <option *ngFor="let hour of hours" [value]="hour">{{ hour }}</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <select formControlName="bookingMinute" class="form-control">
+                    <option value="" disabled selected>Phút</option>
+                    <option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</option>
+                  </select>
+                </div>
+              </div>
+              <div *ngIf="(bookingForm.get('bookingHour')?.invalid && bookingForm.get('bookingHour')?.touched) || 
+                          (bookingForm.get('bookingMinute')?.invalid && bookingForm.get('bookingMinute')?.touched)" class="text-danger">
+                <small>Vui lòng chọn giờ đặt bàn</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="guests">Số lượng khách <span class="required">*</span></label>
+              <select id="guests" formControlName="guests" class="form-control">
+                <option value="" disabled selected>Chọn số lượng khách</option>
+                <option value="1">1 người</option>
+                <option value="2">2 người</option>
+                <option value="3">3 người</option>
+                <option value="4">4 người</option>
+                <option value="5">5 người</option>
+                <option value="6">6 người</option>
+                <option value="7">7 người</option>
+                <option value="8">8 người</option>
+                <option value="9">9 người</option>
+                <option value="10">10 người</option>
+
+              </select>
+              <div *ngIf="bookingForm.get('guests')?.invalid && bookingForm.get('guests')?.touched" class="text-danger">
+                <small *ngIf="bookingForm.get('guests')?.errors?.['required']">Vui lòng chọn số lượng khách</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="note">Ghi chú</label>
+              <textarea id="note" formControlName="note" class="form-control" rows="4" placeholder="Nhập ghi chú đặc biệt nếu có"></textarea>
+            </div>
+
+            <div class="form-group">
+              <button type="submit" class="primary-btn" [disabled]="submitted">
+                <span *ngIf="!submitted">Đặt Bàn</span>
+                <span *ngIf="submitted">Đang xử lý...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="booking-info">
+          <h3>Giờ Mở Cửa</h3>
+          <ul>
+            <li><span>Thứ Hai - Thứ Sáu:</span> 08:00 - 21:00</li>
+            <li><span>Thứ Bảy - Chủ Nhật:</span> 09:00 - 22:00</li>
+            <li><span>Giờ Phục Vụ Bữa Trưa:</span> 11:00 - 14:00</li>
+            <li><span>Giờ Phục Vụ Bữa Tối:</span> 17:00 - 21:00</li>
+          </ul>
+          <p>* Để được phục vụ tốt nhất, vui lòng đặt bàn trước ít nhất 2 giờ</p>
+          <p>* Thời gian giữ bàn tối đa là 15 phút kể từ giờ đặt</p>
+          <p>* Đối với nhóm trên 10 người, vui lòng liên hệ trực tiếp qua số điện thoại: <strong>0123 456 789</strong></p>
         </div>
 
-        <!-- Booking Info -->
-        <div class="col-lg-5">
-          <div class="booking-info">
-            <div class="info-card opening-hours">
-              <h3 class="card-title">
-                <i class="far fa-clock"></i> Thời gian mở cửa
-              </h3>
-              <ul class="hours-list">
-                <li><span>Thứ 2 - Thứ 6</span> <span>08:00 - 21:30</span></li>
-                <li><span>Thứ 7 - Chủ nhật</span> <span>09:00 - 22:30</span></li>
-                <li><span>Ngày lễ</span> <span>09:00 - 22:30</span></li>
-              </ul>
-            </div>
-
-            <div class="info-card contact-info">
-              <h3 class="card-title">
-                <i class="fas fa-phone-alt"></i> Liên hệ đặt bàn
-              </h3>
-              <div class="hotline">1900 6750</div>
-            </div>
-
-            <div class="info-card location-info">
-              <h3 class="card-title">
-                <i class="fas fa-map-marker-alt"></i> Địa chỉ nhà hàng
-              </h3>
-              <p>70 Lữ Gia, Phường 15, Quận 11, TP.HCM</p>
-              <div class="map-container">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.447057414974!2d106.65052697586744!3d10.775827559282464!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752ec3c161a3fb%3A0xef77cd47a1cc691e!2zNzAgTMawIEdpYSwgUGjGsOG7nW5nIDE1LCBRdeG6rW4gMTEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaCwgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1695000000000!5m2!1svi!2s" width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-              </div>
-            </div>
+        <div class="booking-history mt-5" *ngIf="bookingHistory.length > 0">
+          <h3>Lịch Sử Đặt Bàn</h3>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Ngày đặt</th>
+                  <th>Giờ đặt</th>
+                  <th>Số người</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let booking of bookingHistory">
+                  <td>{{ formatDisplayDate(booking.date) }}</td>
+                  <td>{{ booking.time }}</td>
+                  <td>{{ booking.guests }}</td>
+                  <td><span [ngClass]="'status-' + booking.status">{{ booking.status | titlecase }}</span></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</section>
+
+<section class="map-section">
+  <div class="container">
+    <div class="map">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.1096855367523!2d105.77955827527194!3d21.028805887774866!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab4cd0c66f05%3A0xea31563511af2e54!2zOCBUw7RuIFRo4bqldCBUaHV54bq_dCwgTeG7uSDEkMOsbmgsIEPhuqd1IEdp4bqleSwgSMOgIE7hu5lpLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1684808159707!5m2!1svi!2s"
+        height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+</section>
 
 <app-footer></app-footer>

@@ -40,6 +40,11 @@ export class PizzaDetailComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    // Get the pizza ID from the route parameters
+    const idParam = this.activatedRoute.snapshot.paramMap.get('id');
+    if(idParam !== null) {
+      this.pizzaId = +idParam;
+    }
 
     // First load sizes and types
     this.loadSizesAndTypes(() => {
@@ -80,10 +85,6 @@ export class PizzaDetailComponent implements OnInit {
   }
 
   getPizza(): void {
-    const idParam = this.activatedRoute.snapshot.paramMap.get('id');
-    if(idParam !== null) {
-      this.pizzaId = +idParam;
-    }
     if(!isNaN(this.pizzaId)) {
       this.isLoading = true;
       this.error = '';
@@ -118,21 +119,21 @@ export class PizzaDetailComponent implements OnInit {
         }
       });
     } else {
-      console.error('Invalid pizzaId:', idParam);
+      console.error('Invalid pizzaId:', this.pizzaId);
       this.error = 'Invalid pizza ID provided.';
     }
   }
 
   setDefaultSelections(): void {
     // Set default size - first from pizza.sizes or from global sizes
-    if (this.pizza.sizes && this.pizza.sizes.length > 0) {
+    if (this.pizza && this.pizza.sizes && this.pizza.sizes.length > 0) {
       this.selectedSize = this.pizza.sizes[0];
     } else if (this.sizes.length > 0) {
       this.selectedSize = this.sizes[0];
     }
     
     // Set default type - first from pizza.crusts or from global types
-    if (this.pizza.crusts && this.pizza.crusts.length > 0) {
+    if (this.pizza && this.pizza.crusts && this.pizza.crusts.length > 0) {
       this.selectedType = this.pizza.crusts[0];
     } else if (this.types.length > 0) {
       this.selectedType = this.types[0];
@@ -176,7 +177,7 @@ export class PizzaDetailComponent implements OnInit {
   }
 
   addToCart(): void {
-    if (!this.selectedSize || !this.selectedType) {
+    if (!this.pizza || !this.selectedSize || !this.selectedType) {
       return;
     }
     
@@ -186,28 +187,13 @@ export class PizzaDetailComponent implements OnInit {
       id: this.pizzaId,
       name: this.pizza.name,
       image: this.pizza.url,
-      size: {
-        id: this.selectedSize.id,
-        name: this.selectedSize.size_name,
-        price_multiplier: this.selectedSize.price_multiplier
-      },
-      type: {
-        id: this.selectedType.id,
-        name: this.selectedType.base_name,
-        price: this.selectedType.price
-      },
+      size: this.selectedSize.size_name,
+      type: this.selectedType.base_name,
       quantity: this.quantity,
-      price: totalPrice,
-      note: this.orderNote
+      price: totalPrice
     };
     
-    this.cartService.addToCart(
-      this.pizzaId,
-      this.selectedSize.id,
-      this.selectedType.id,
-      this.quantity,
-      totalPrice
-    );
+    this.cartService.addToCart(cartItem);
     
     alert('Pizza added to cart successfully!');
   }

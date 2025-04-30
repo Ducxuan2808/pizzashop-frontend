@@ -181,13 +181,24 @@ export class HomeComponent implements OnInit {
   addToCart(): void {
     if (!this.selectedPizza) return;
     
-    this.cartService.addToCart(
-      this.selectedPizza.id,
-      this.selectedSizeId,
-      this.selectedTypeId,
-      this.quantity,
-      this.selectedPizzaPrice
-    );
+    // Create cart item object
+    const selectedSize = this.sizes.find(s => s.id === this.selectedSizeId);
+    const selectedType = this.types.find(t => t.id === this.selectedTypeId);
+    
+    if (!selectedSize || !selectedType) return;
+    
+    const cartItem = {
+      id: this.selectedPizza.id,
+      name: this.selectedPizza.name,
+      image: this.selectedPizza.url,
+      size: selectedSize.size_name,
+      type: selectedType.base_name,
+      quantity: this.quantity,
+      price: this.selectedPizzaPrice
+    };
+    
+    // Add to cart using CartService
+    this.cartService.addToCart(cartItem);
     
     this.closePopup();
     

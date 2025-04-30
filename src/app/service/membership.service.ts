@@ -23,7 +23,7 @@ export class MembershipService{
         return this.http.get<Membership>(`${this.apiGetmembership}/${membershipId}`);
     }
 
-    getMembershipByUserPhone(phone:number){
+    getMembershipByUserPhone(phone: string){
         return this.http.get<Membership>(`${this.apiGetmembership}/phone/${phone}`);
     }
 }

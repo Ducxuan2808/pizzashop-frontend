@@ -5,8 +5,8 @@
     <div class="container">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-          <li class="breadcrumb-item"><a href="/cart">Giỏ hàng</a></li>
+          <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+          <li class="breadcrumb-item"><a routerLink="/cart">Giỏ hàng</a></li>
           <li class="breadcrumb-item active" aria-current="page">Thanh toán</li>
         </ol>
       </nav>
@@ -15,147 +15,222 @@
 
   <!-- Main Content -->
   <div class="container mt-4">
-    <div class="row">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Đang xử lý...</p>
+    </div>
+
+    <!-- No Checkout Data -->
+    <div *ngIf="!checkoutData && !isLoading" class="text-center py-5">
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Không có thông tin đơn hàng. Vui lòng quay lại giỏ hàng.
+      </div>
+      <button routerLink="/cart" class="btn btn-primary mt-3">
+        <i class="fas fa-shopping-cart me-2"></i> Quay lại giỏ hàng
+      </button>
+    </div>
+
+    <!-- Order Form -->
+    <div class="row" *ngIf="checkoutData && !isLoading">
       <!-- Order Form -->
       <div class="col-lg-8">
         <div class="order-form">
           <h2 class="form-title">Thông tin đặt hàng</h2>
           
-          <!-- Customer Information -->
-          <div class="form-section">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h3 class="section-title mb-0">Thông tin khách hàng</h3>
-              <button type="button" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-user-circle"></i> Sử dụng thông tin cá nhân
-              </button>
-            </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="fullName" class="form-label">Họ và tên *</label>
-                <input type="text" class="form-control" id="fullName" required>
+          <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+            <!-- Customer Information -->
+            <div class="form-section">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="section-title mb-0">Thông tin khách hàng</h3>
+                <button type="button" class="btn btn-outline-primary btn-sm" (click)="fillWithUserProfile()" style="color: #ff6b00; border-color: #ff6b00;">
+                  <i class="fas fa-user-circle"></i> Sử dụng thông tin cá nhân
+                </button>
               </div>
-              <div class="col-md-6 mb-3">
-                <label for="phone" class="form-label">Số điện thoại *</label>
-                <input type="tel" class="form-control" id="phone" required>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="fullName" formControlName="fullName">
+                  <div *ngIf="orderForm.get('fullName')?.invalid && orderForm.get('fullName')?.touched" class="text-danger mt-1">
+                    <small *ngIf="orderForm.get('fullName')?.errors?.['required']">Họ tên không được để trống</small>
+                    <small *ngIf="orderForm.get('fullName')?.errors?.['minlength']">Họ tên phải có ít nhất 3 ký tự</small>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" id="phone" formControlName="phone">
+                  <div *ngIf="orderForm.get('phone')?.invalid && orderForm.get('phone')?.touched" class="text-danger mt-1">
+                    <small *ngIf="orderForm.get('phone')?.errors?.['required']">Số điện thoại không được để trống</small>
+                    <small *ngIf="orderForm.get('phone')?.errors?.['pattern']">Số điện thoại không hợp lệ (10-11 số)</small>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email">
-            </div>
-          </div>
-
-          <!-- Delivery Information -->
-          <div class="form-section">
-            <h3 class="section-title">Thông tin giao hàng</h3>
-            <div class="mb-3">
-              <label for="address" class="form-label">Địa chỉ giao hàng *</label>
-              <input type="text" class="form-control" id="address" required>
-            </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="deliveryDate" class="form-label">Ngày giao hàng *</label>
-                <input type="date" class="form-control" id="deliveryDate" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="deliveryTime" class="form-label">Giờ giao hàng *</label>
-                <div class="time-picker">
-                  <select class="form-control hour-select">
-                    <option value="">Giờ</option>
-                    <option value="08">08</option>
-                    <option value="09">09</option>
-                    <option value="10">10</option>
-                    <option value="11">11</option>
-                    <option value="12">12</option>
-                    <option value="13">13</option>
-                    <option value="14">14</option>
-                    <option value="15">15</option>
-                    <option value="16">16</option>
-                    <option value="17">17</option>
-                    <option value="18">18</option>
-                    <option value="19">19</option>
-                    <option value="20">20</option>
-                    <option value="21">21</option>
-                  </select>
-                  <span class="time-separator">:</span>
-                  <select class="form-control minute-select">
-                    <option value="">Phút</option>
-                    <option value="00">00</option>
-                    <option value="15">15</option>
-                    <option value="30">30</option>
-                    <option value="45">45</option>
-                  </select>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" formControlName="email">
+                <div *ngIf="orderForm.get('email')?.invalid && orderForm.get('email')?.touched" class="text-danger mt-1">
+                  <small *ngIf="orderForm.get('email')?.errors?.['email']">Email không hợp lệ</small>
                 </div>
               </div>
             </div>
-          </div>
 
-         
-          <!-- Order Note -->
-          <div class="form-section">
-            <h3 class="section-title">Ghi chú đơn hàng</h3>
-            <div class="mb-3">
-              <textarea class="form-control" id="orderNote" rows="3" placeholder="Ghi chú cho đơn hàng của bạn..."></textarea>
+            <!-- Delivery Information -->
+            <div class="form-section">
+              <h3 class="section-title">Thông tin giao hàng</h3>
+              <div class="row mb-3">
+                <div class="col-md-12">
+                  <label for="address" class="form-label">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+                  <input type="text" id="address" class="form-control" formControlName="address" placeholder="Địa chỉ giao hàng đầy đủ">
+                  <div *ngIf="orderForm.get('address')?.invalid && orderForm.get('address')?.touched" class="text-danger">
+                    <small *ngIf="orderForm.get('address')?.errors?.['required']">Vui lòng nhập địa chỉ giao hàng</small>
+                    <small *ngIf="orderForm.get('address')?.errors?.['minlength']">Địa chỉ phải có ít nhất 10 ký tự</small>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="deliveryDate" class="form-label">Ngày giao hàng <span class="text-danger">*</span></label>
+                  <input type="date" id="deliveryDate" class="form-control" formControlName="deliveryDate" 
+                    [min]="getMinDate()" [max]="getMaxDate()">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Thời gian giao <span class="text-danger">*</span></label>
+                  <div class="time-picker">
+                    <select id="deliveryHour" class="form-select hour-select" formControlName="deliveryHour">
+                      <option value="" disabled selected>Giờ</option>
+                      <option *ngFor="let hour of hours" [value]="hour">{{hour < 10 ? '0' + hour : hour}}</option>
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select id="deliveryMinute" class="form-select minute-select" formControlName="deliveryMinute">
+                      <option *ngFor="let minute of minutes" [value]="minute">{{minute}}</option>
+                    </select>
+                  </div>
+                  <div *ngIf="orderForm.get('deliveryHour')?.invalid && orderForm.get('deliveryHour')?.touched" class="text-danger">
+                    <small>Vui lòng chọn giờ giao hàng</small>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-           <!-- Payment Method -->
-           <div class="form-section">
-            <h3 class="section-title">Phương thức thanh toán</h3>
-            <div class="payment-methods">
-              <div class="form-check mb-3">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="cash" checked>
-                <label class="form-check-label" for="cash">
+            <!-- Order Note -->
+            <div class="form-section">
+              <div class="row mb-3">
+                <div class="col-md-12">
+                  <label for="note" class="form-label">Ghi chú</label>
+                  <textarea id="note" class="form-control" rows="3" formControlName="note" 
+                    placeholder="Ghi chú thêm về đơn hàng (nếu có)"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Method Section -->
+            <div class="form-section">
+              <h3 class="section-title">Phương thức thanh toán</h3>
+              <div class="payment-buttons">
+                <button type="button" class="btn payment-btn cod-btn" 
+                  [class.active]="selectedPaymentMethod === 'cash'"
+                  (click)="selectPaymentMethod('cash')">
                   <i class="fas fa-money-bill-wave"></i> Thanh toán khi nhận hàng
-                </label>
+                </button>
+                <button type="button" class="btn payment-btn vnpay-btn"
+                  [class.active]="selectedPaymentMethod === 'vnpay'"
+                  (click)="selectPaymentMethod('vnpay')">
+                  <i class="fas fa-credit-card"></i> Thanh toán VNPay
+                  <span class="payment-badge">Online</span>
+                </button>
+                <!-- <button type="button" class="btn payment-btn momo-btn"
+                  [class.active]="selectedPaymentMethod === 'momo'"
+                  (click)="selectPaymentMethod('momo')">
+                  <i class="fas fa-wallet"></i> Thanh toán ví Momo
+                </button> -->
               </div>
-              <div class="form-check mb-3">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="bank">
-                <label class="form-check-label" for="bank">
-                  <i class="fas fa-university"></i> Chuyển khoản ngân hàng
-                </label>
+              <div *ngIf="selectedPaymentMethod === 'vnpay'" class="payment-info mt-2">
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch sau khi nhấn "Đặt hàng ngay"
+                </div>
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="momo">
-                <label class="form-check-label" for="momo">
-                  <i class="fas fa-mobile-alt"></i> Ví điện tử Momo
-                </label>
+              <div *ngIf="orderForm.get('paymentMethod')?.invalid && orderForm.get('paymentMethod')?.touched" class="text-danger">
+                <small>Vui lòng chọn phương thức thanh toán</small>
               </div>
             </div>
-          </div>
-
+          </form>
         </div>
       </div>
       
-
       <!-- Order Summary -->
       <div class="col-lg-4">
         <div class="order-summary">
           <h3 class="summary-title">Đơn hàng của bạn</h3>
           <div class="order-items">
-            <div class="order-item">
+            <div *ngFor="let item of checkoutData.items" class="order-item">
               <div class="item-info">
-                <span class="item-name">Pizza Hải Sản</span>
-                <span class="item-quantity">x 2</span>
+                <div class="item-name-row">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-quantity">x {{ item.quantity }}</span>
+                </div>
+                <span class="item-options">Size: {{ item.size }}, Loại: {{ item.type }}</span>
               </div>
-              <div class="item-price">500,000đ</div>
+              <div class="item-price">{{ formatPrice(item.price * item.quantity) }}</div>
             </div>
           </div>
           <div class="summary-details">
             <div class="summary-row">
               <span>Tạm tính</span>
-              <span>500,000đ</span>
+              <span>{{ formatPrice(checkoutData.subtotal) }}</span>
             </div>
             <div class="summary-row">
               <span>Phí vận chuyển</span>
-              <span>30,000đ</span>
+              <span>{{ formatPrice(checkoutData.shippingFee) }}</span>
             </div>
             <div class="summary-row total">
               <span>Tổng cộng</span>
-              <span>530,000đ</span>
+              <span>{{ formatPrice(checkoutData.total) }}</span>
             </div>
           </div>
-          <button class="btn-place-order">Đặt hàng</button>
+          <div class="summary-actions mt-4">
+            <button type="submit" class="btn btn-place-order" [disabled]="orderForm.invalid || submitting" (click)="onSubmit()">
+              <i class="fas fa-check-circle me-2"></i>
+              {{ submitting ? 'Đang xử lý...' : 'Đặt hàng ngay' }}
+            </button>
+            
+            <div *ngIf="selectedPaymentMethod === 'vnpay'" class="payment-flow mt-3 mb-3">
+              <div class="payment-flow-steps">
+                <div class="step">
+                  <div class="step-number">1</div>
+                  <div class="step-text">Đặt hàng</div>
+                </div>
+                <div class="step-arrow">
+                  <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="step">
+                  <div class="step-number">2</div>
+                  <div class="step-text">Thanh toán qua VNPay</div>
+                </div>
+                <div class="step-arrow">
+                  <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="step">
+                  <div class="step-number">3</div>
+                  <div class="step-text">Xác nhận đơn hàng</div>
+                </div>
+              </div>
+            </div>
+            
+            <a routerLink="/cart" class="btn btn-back-to-cart">
+              <i class="fas fa-arrow-left me-2"></i>
+              Quay lại giỏ hàng
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -52,6 +52,62 @@
     }
   }
 
+  // Loading container style
+  .loading-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: #666;
+    }
+  }
+
+  // Empty cart style
+  .empty-cart {
+    background: white;
+    padding: 3rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+
+    i {
+      color: #ddd;
+    }
+
+    h4 {
+      margin-top: 1rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+      background-color: #ff6b00;
+      border-color: #ff6b00;
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: #e86000;
+        border-color: #e86000;
+      }
+    }
+  }
+
   .delivery-time-section {
     background: white;
     padding: 1.5rem;

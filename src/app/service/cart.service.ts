@@ -1,71 +1,159 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Pizza } from '../model/pizza';
-import { PizzaService } from './pizza.service';
+import { Subject, BehaviorSubject } from 'rxjs';
+
+export interface CartItem {
+  id: number;
+  name: string;
+  image?: string;
+  size: string;
+  type: string;
+  quantity: number;
+  price: number;
+}
+
+export interface CheckoutData {
+  items: CartItem[];
+  subtotal: number;
+  shippingFee: number;
+  total: number;
+}
 
 @Injectable({
-    providedIn:'root',
+  providedIn: 'root'
 })
+export class CartService {
+  private cartItems: CartItem[] = [];
+  cartUpdated = new Subject<void>();
+  
+  // Checkout data for order page
+  private checkoutDataSubject = new BehaviorSubject<CheckoutData | null>(null);
+  checkoutData$ = this.checkoutDataSubject.asObservable();
+  
+  // Default shipping fee
+  private shippingFee: number = 30000;
 
-export class CartService{
-    private cart: Map<string, {pizzaId: number, sizeId: number, typeId: number, quantity: number, price: number}> = new Map();
-    constructor(){
-        this.refreshCart();
-    }
-    public refreshCart(){
-        const storedCart = localStorage.getItem(this.getCartKey());
-        if(storedCart){
-            this.cart = new Map(JSON.parse(storedCart));
-        }else{
-            this.cart = new Map<string, {pizzaId: number, sizeId: number, typeId: number, quantity: number, price: number}>();
-        }
-    }
-    private getCartKey():string{
-        
-        const userResponseJSON = localStorage.getItem('user');
-        const userResponse = JSON.parse(userResponseJSON!);
-        debugger
-        return `cart:${userResponse?.id??''}`;
-        
-    }
-    addToCart(pizzaId:number, sizeId:number, typeId:number, quantity:number=1, price: number):void{
-        debugger
-       // Create a unique key for this pizza configuration
-       const cartItemKey = `${pizzaId}-${sizeId}-${typeId}`;
-        
-       if (this.cart.has(cartItemKey)) {
-           const existingItem = this.cart.get(cartItemKey)!;
-           existingItem.quantity += quantity;
-           this.cart.set(cartItemKey, existingItem);
-       } else {
-           this.cart.set(cartItemKey, {
-               pizzaId,
-               sizeId,
-               typeId,
-               quantity,
-               price
-           });
-       }
-        this.saveCartToLocalStorage();
-    }
+  constructor() {
+    this.loadCartFromStorage();
+  }
 
-    getCart(): Map<string, {pizzaId: number, sizeId: number, typeId: number, quantity: number, price: number}> {
-        return this.cart;
+  private loadCartFromStorage(): void {
+    const cartData = localStorage.getItem('cart');
+    if (cartData) {
+      this.cartItems = JSON.parse(cartData);
+    }
+  }
+
+  private saveCartToStorage(): void {
+    localStorage.setItem('cart', JSON.stringify(this.cartItems));
+    this.cartUpdated.next();
+  }
+
+  getCartItems(): CartItem[] {
+    return [...this.cartItems];
+  }
+
+  addToCart(item: CartItem): void {
+    const existingItemIndex = this.cartItems.findIndex(
+      cartItem => 
+        cartItem.id === item.id && 
+        cartItem.size === item.size && 
+        cartItem.type === item.type
+    );
+
+    if (existingItemIndex >= 0) {
+      this.cartItems[existingItemIndex].quantity += item.quantity;
+    } else {
+      this.cartItems.push({ ...item });
     }
 
-    private saveCartToLocalStorage():void{
-        debugger
-        localStorage.setItem(this.getCartKey(), JSON.stringify(Array.from(this.cart.entries())));
-    }
+    this.saveCartToStorage();
+  }
 
-    clearCart():void{
-        debugger;
-        this.cart.clear();
-        this.saveCartToLocalStorage();
+  updateItemQuantity(itemId: number, quantity: number): void {
+    const index = this.cartItems.findIndex(item => item.id === itemId);
+    if (index >= 0) {
+      this.cartItems[index].quantity = quantity;
+      this.saveCartToStorage();
     }
-    setCart(cart: Map<string, {pizzaId: number, sizeId: number, typeId: number, quantity: number, price: number}>) {
-        this.cart = cart ?? new Map<string, {pizzaId: number, sizeId: number, typeId: number, quantity: number, price: number}>();
-        this.saveCartToLocalStorage();
+  }
+
+  removeItem(itemId: number): void {
+    this.cartItems = this.cartItems.filter(item => item.id !== itemId);
+    this.saveCartToStorage();
+  }
+
+  clearCart(): void {
+    this.cartItems = [];
+    this.saveCartToStorage();
+  }
+
+  getTotalItems(): number {
+    return this.cartItems.reduce((total, item) => total + item.quantity, 0);
+  }
+
+  getTotalPrice(): number {
+    return this.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
+  
+  // Method to prepare checkout data for the order page
+  prepareCheckoutData(): CheckoutData {
+    const subtotal = this.getTotalPrice();
+    const total = subtotal + this.shippingFee;
+    
+    const checkoutData: CheckoutData = {
+      items: [...this.cartItems],
+      subtotal,
+      shippingFee: this.shippingFee,
+      total
+    };
+    
+    // Save to BehaviorSubject for components to access
+    this.checkoutDataSubject.next(checkoutData);
+    
+    // Also save to sessionStorage for persistence between page refreshes
+    sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+    
+    return checkoutData;
+  }
+  
+  // Method to get checkout data (from session storage if available)
+  getCheckoutData(): CheckoutData | null {
+    // First try to get from BehaviorSubject
+    let checkoutData = this.checkoutDataSubject.getValue();
+    
+    // If not available, try to get from sessionStorage
+    if (!checkoutData) {
+      const storedData = sessionStorage.getItem('checkoutData');
+      if (storedData) {
+        checkoutData = JSON.parse(storedData);
+        this.checkoutDataSubject.next(checkoutData);
+      }
     }
-}
+    
+    return checkoutData;
+  }
+  
+  // Method to clear checkout data after order is placed
+  clearCheckoutData(): void {
+    debugger
+    sessionStorage.removeItem('checkoutData');
+    this.checkoutDataSubject.next(null);
+  }
+  
+  // Update shipping fee (can be used if different shipping options are available)
+  updateShippingFee(fee: number): void {
+    this.shippingFee = fee;
+    
+    // Update checkout data if it exists
+    const currentData = this.checkoutDataSubject.getValue();
+    if (currentData) {
+      const updatedData = {
+        ...currentData,
+        shippingFee: fee,
+        total: currentData.subtotal + fee
+      };
+      this.checkoutDataSubject.next(updatedData);
+      sessionStorage.setItem('checkoutData', JSON.stringify(updatedData));
+    }
+  }
+} 

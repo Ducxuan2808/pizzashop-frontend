@@ -11,6 +11,8 @@ export class OrderDTO{
 
     email:string;
 
+    phone_order:string;
+
     delivery_phone:string;
 
     delivery_address:string;
@@ -31,13 +33,18 @@ export class OrderDTO{
 
     shipping_time: Date
 
-    cart_items: {product_id:number, quantity:number}[];
+    shipping_fee: number
+
+    transaction_id?: string;
+
+    cart_items: {pizza_id:number, size_id:number, base_id:number, quantity:number, price:number}[];
 
     constructor(data:any){
         this.user_id=data.user_id;
         this.full_name = data.full_name;
         this.order_type = data.order_type;
         this.email = data.email;
+        this.phone_order = data.phone_order;
         this.delivery_phone = data.delivery_phone;
         this.delivery_address = data.delivery_address;
         this.status = data.status;
@@ -48,7 +55,12 @@ export class OrderDTO{
         this.discount_amount = data.discount_amount;
         this.table_number = data.table_number;
         this.shipping_time = data.shipping_time;
+        this.shipping_fee = data.shipping_fee || 0;
         this.cart_items = data.cart_items;
+        
+        if (data.transaction_id) {
+            this.transaction_id = data.transaction_id;
+        }
     }
 
 }

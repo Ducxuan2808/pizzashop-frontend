@@ -1,45 +1,37 @@
-.booking-page {
-  padding: 0 0 40px;
-  background-color: #f9f9f9;
+@import '../../../styles/_variables';
 
-  .breadcrumb-container {
-    margin-bottom: 30px;
-    background-color: #f8f9fa;
-    padding: 12px 0;
-    border-bottom: 1px solid #eee;
-
-    .breadcrumb {
-      margin-bottom: 0;
-      padding: 0;
-      background-color: transparent;
-
-      .breadcrumb-item {
-        font-size: 14px;
-        color: #6c757d;
+.breadcrumb-container {
+  background-color: #f8f9fa;
+  padding: 15px 0;
+  margin-bottom: 30px;
+  
+  .breadcrumb {
+    margin-bottom: 0;
+    background-color: transparent;
+    
+    .breadcrumb-item {
+      font-size: 14px;
+      
+      a {
+        color: #666;
+        text-decoration: none;
+        transition: color 0.3s;
         
-        + .breadcrumb-item::before {
-          content: "/";
-          color: #adb5bd;
+        &:hover {
+          color: $primary-color;
         }
-
-        &.active {
-          color: #ff6b00;
-          font-weight: 500;
-        }
-
-        a {
-          color: #6c757d;
-          text-decoration: none;
-          transition: color 0.2s;
-
-          &:hover {
-            color: #ff6b00;
-            text-decoration: none;
-          }
-        }
+      }
+      
+      &.active {
+        color: $primary-color;
       }
     }
   }
+}
+
+.booking-page {
+  padding: 0 0 40px;
+  background-color: #f9f9f9;
 
   .booking-content {
     .booking-form {
@@ -189,5 +181,264 @@
         }
       }
     }
+  }
+}
+
+.contact-section {
+  padding: 0px 0;
+
+  .booking-form {
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+    margin-bottom: 30px;
+
+    h3 {
+      font-size: 24px;
+      margin-bottom: 5px;
+      color: $primary-color;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 25px;
+      color: #777;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+
+        .required {
+          color: red;
+        }
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 15px;
+        transition: all 0.3s;
+
+        &:focus {
+          border-color: $primary-color;
+          box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+        }
+      }
+
+      .text-danger {
+        font-size: 13px;
+        margin-top: 5px;
+        color: red;
+      }
+    }
+
+    .time-select {
+      select {
+        width: 100%;
+      }
+    }
+
+    .primary-btn {
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-block;
+      width: 100%;
+
+      &:hover {
+        background-color: darken($primary-color, 10%);
+      }
+
+      &:disabled {
+        background-color: #aaa;
+        cursor: not-allowed;
+      }
+    }
+
+    .alert {
+      padding: 12px 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+
+      &.alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      &.alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    }
+  }
+
+  .booking-info {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 5px;
+    height: 100%;
+    max-height: 350px;
+
+    h3 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: $primary-color;
+      font-weight: 600;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+
+      li {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+        font-size: 15px;
+        display: flex;
+        justify-content: space-between;
+
+        span:first-child {
+          font-weight: 500;
+          color: #333;
+        }
+      }
+    }
+
+    p {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+    }
+  }
+
+  .booking-history {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 5px;
+
+    h3 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: $primary-color;
+      font-weight: 600;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      
+      th {
+        background-color: $primary-color;
+        color: white;
+        padding: 12px;
+        text-align: left;
+      }
+      
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .badge {
+        padding: 5px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 500;
+        
+        &.badge-primary {
+          background-color: #cce5ff;
+          color: #004085;
+        }
+        
+        &.badge-success {
+          background-color: #d4edda;
+          color: #155724;
+        }
+        
+        &.badge-warning {
+          background-color: #fff3cd;
+          color: #856404;
+        }
+        
+        &.badge-danger {
+          background-color: #f8d7da;
+          color: #721c24;
+        }
+      }
+    }
+  }
+}
+
+.map-section {
+  padding-bottom: 80px;
+
+  .map {
+    width: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    
+    iframe {
+      width: 100%;
+      display: block;
+    }
+  }
+}
+
+// Responsive styles
+@media (max-width: 992px) {
+  .contact-section {
+    .booking-info {
+      margin-top: 30px;
+      max-height: none;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-section {
+    padding: 50px 0;
+    
+    .booking-form {
+      padding: 20px;
+    }
+    
+    .booking-info,
+    .booking-history {
+      padding: 20px;
+    }
+  }
+  
+  .map-section {
+    padding-bottom: 50px;
+    
+    .map iframe {
+      height: 300px;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .breadcrumb-container .breadcrumb .breadcrumb-item {
+    font-size: 12px;
   }
 }

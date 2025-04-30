@@ -13,30 +13,44 @@ import { OrderResponse } from '../responses/order/order.response';
 export class OrderService{
     private apiUrl =  `${environment.apiBaseUrl}/orders`;
     private apiGetAllOrders =  `${environment.apiBaseUrl}/orders/get-orders-by-keyword`;
+    private apiUpdateOrderStatus = `${environment.apiBaseUrl}/orders/update-order-status`;
+    private apiPlaceOrder = `${environment.apiBaseUrl}/orders/place-order`;
 
     constructor(private http:HttpClient){}
 
     placeOrder(orderData: OrderDTO):Observable<any>{
+        debugger;
         return this.http.post(this.apiUrl,orderData);
     }
+    
     getOrderById(orderId:number):Observable<any>{
         const url = `${environment.apiBaseUrl}/orders/${orderId}`;
         return this.http.get(url);
     }
-    getAllOrders(keyword:string, page: number, limit: number): Observable<OrderResponse[]>{
-        debugger
-        const params = new HttpParams()
-        .set('keyword', keyword)
-        .set('page',page.toString())
-        .set('limit',limit.toString());
-        return this.http.get<any>(this.apiGetAllOrders, {params})
+    
+    getAllOrders(keyword: string = '', page: number = 0, limit: number = 10): Observable<any> {
+        let params = new HttpParams();
+        debugger;
+        if (keyword) params = params.append('keyword', keyword);
+        params = params.append('page', page.toString());
+        params = params.append('limit', limit.toString());
+        
+        return this.http.get<any>(this.apiGetAllOrders, { params });
     }
+    
     updateOrder(orderId:number, orderData:OrderDTO): Observable<any>{
+        debugger;
         const url =  `${environment.apiBaseUrl}/orders/${orderId}`;
         return this.http.put(url,orderData);
     }
+    
     deleteOrder(orderId:number):Observable<any>{
         const url = `${environment.apiBaseUrl}/orders/${orderId}`;
         return this.http.delete(url, {responseType: 'text'});
+    }
+
+    // Create new order
+    createOrder(orderData: OrderDTO): Observable<any> {
+        return this.http.post<any>(this.apiPlaceOrder, orderData);
     }
 }
