@@ -133,16 +133,34 @@
 .user-dropdown-content {
   display: none;
   position: absolute;
-  background-color: white;
+  background-color: #f9f9f9;
   min-width: 200px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-  border-radius: 5px;
+  z-index: 999;
   right: 0;
+  top: 45px;
+  border-radius: 8px;
 }
 
 .user-dropdown:hover .user-dropdown-content {
   display: block;
+}
+
+.dropdown-item {
+  padding: 10px 15px;
+  display: block;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f1f1f1;
+  }
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: 5px 0;
+  background-color: #e9ecef;
 }
 
 .user-dropdown-item {

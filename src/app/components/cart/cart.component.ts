@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CartService } from '../../service/cart.service';
+import { CartService, CartItem as ServiceCartItem } from '../../service/cart.service';
 import { PizzaService } from '../../service/pizza.service';
 import { SizeService } from '../../service/size.service';
 import { TypeService } from '../../service/type.service';
@@ -9,26 +9,25 @@ import { Type } from '../../model/type';
 import { environment } from '../../environments/environments';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { PizzaImage } from '../../model/pizza.image';
+import { MessageService } from 'primeng/api';
 
-interface CartItem {
-  id: number;
-  name: string;
-  image?: string;
-  size: string;
-  type: string;
-  quantity: number;
-  price: number;
+// Extended CartItem for UI
+interface ExtendedCartItem extends ServiceCartItem {
   pizza?: Pizza;
+  size?: Size;
+  type?: Type;
 }
 
 @Component({
   selector: 'app-cart',
   standalone: false,
   templateUrl: './cart.component.html',
-  styleUrl: './cart.component.scss'
+  styleUrl: './cart.component.scss',
+  providers: [MessageService]
 })
 export class CartComponent implements OnInit, OnDestroy {
-  cartItems: CartItem[] = [];
+  cartItems: ExtendedCartItem[] = [];
   cartTotal: number = 0;
   cartItemCount: number = 0;
   shippingFee: number = 30000; // Phí vận chuyển
@@ -44,7 +43,8 @@ export class CartComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private pizzaService: PizzaService,
     private sizeService: SizeService,
-    private typeService: TypeService
+    private typeService: TypeService,
+    private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
@@ -109,7 +109,7 @@ export class CartComponent implements OnInit, OnDestroy {
     }
     
     // Extract unique pizza IDs from cart items
-    const pizzaIds = [...new Set(cartItems.map(item => item.id))];
+    const pizzaIds = [...new Set(cartItems.map(item => item.pizzaId))];
     
     // If there are pizzas in the cart, fetch their details
     if (pizzaIds.length > 0) {
@@ -117,33 +117,45 @@ export class CartComponent implements OnInit, OnDestroy {
         next: (pizzas: Pizza[]) => {
           // Process pizzas to ensure they have image URLs
           pizzas.forEach(pizza => {
-            // Set the pizza image URL if it doesn't exist
-            if (!pizza.url) {
-              pizza.url = `${this.getApiBaseUrl()}/pizzas/images/${pizza.thumbnail}`;
-            }
-            
-            // Ensure pizza_images have URLs if they exist
             if (pizza.pizza_images && pizza.pizza_images.length > 0) {
-              pizza.pizza_images.forEach(image => {
-                if (!image.image_url.startsWith('http')) {
-                  image.image_url = `${this.getApiBaseUrl()}/pizzas/images/${image.image_url}`;
-                }
+              pizza.pizza_images.forEach((pizza_image: PizzaImage) => {
+                pizza_image.image_url = `${environment.apiBaseUrl}/pizzas/images/${pizza_image.image_url}`;
               });
+              pizza.url = pizza.pizza_images[pizza.pizza_images.length - 1].image_url;
+            }
+            // Set URL for main image if not already set
+            if (!pizza.url) {
+              pizza.url = `${environment.apiBaseUrl}/pizzas/images/${pizza.thumbnail}`;
             }
           });
           
-          // Create a map of pizzas for quick lookup
+          // Create maps for pizzas, sizes, and types for quick lookup
           const pizzaMap = new Map<number, Pizza>();
           pizzas.forEach(pizza => {
             pizzaMap.set(pizza.id, pizza);
           });
           
+          const sizeMap = new Map<number, Size>();
+          this.sizes.forEach(size => {
+            sizeMap.set(size.id, size);
+          });
+          
+          const typeMap = new Map<number, Type>();
+          this.types.forEach(type => {
+            typeMap.set(type.id, type);
+          });
+          
           // Enrich cart items with pizza details
           this.cartItems = cartItems.map(item => {
-            const pizza = pizzaMap.get(item.id);
+            const pizza = pizzaMap.get(item.pizzaId);
+            const size = sizeMap.get(item.sizeId);
+            const type = typeMap.get(item.typeId);
+            
             return {
               ...item,
-              pizza
+              pizza,
+              size,
+              type
             };
           });
           
@@ -153,7 +165,11 @@ export class CartComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error fetching pizza details:', error);
-          this.cartItems = cartItems;
+          this.cartItems = cartItems.map(item => ({
+            ...item,
+            size: this.getSizeById(item.sizeId),
+            type: this.getTypeById(item.typeId)
+          }));
           this.calculateCartTotals();
           this.isCartLoading = false;
         }
@@ -181,14 +197,14 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cartItemCount = this.cartService.getTotalItems();
   }
 
-  public updateCartItemQuantity(item: CartItem, change: number): void {
+  public updateCartItemQuantity(item: ExtendedCartItem, change: number): void {
     const newQuantity = item.quantity + change;
     if (newQuantity >= 1 && newQuantity <= 50) {
-      this.cartService.updateItemQuantity(item.id, newQuantity);
+      this.cartService.updateItemQuantity(item.pizzaId, newQuantity);
     }
   }
 
-  public setCartItemQuantity(item: CartItem, event: any): void {
+  public setCartItemQuantity(item: ExtendedCartItem, event: any): void {
     let newQuantity = parseInt(event.target.value);
     
     // Validate quantity
@@ -199,11 +215,11 @@ export class CartComponent implements OnInit, OnDestroy {
     }
     
     // Update the cart
-    this.cartService.updateItemQuantity(item.id, newQuantity);
+    this.cartService.updateItemQuantity(item.pizzaId, newQuantity);
   }
 
-  public removeCartItem(item: CartItem): void {
-    this.cartService.removeItem(item.id);
+  public removeCartItem(item: ExtendedCartItem): void {
+    this.cartService.removeItem(item.pizzaId);
   }
 
   public clearCart(): void {
@@ -211,11 +227,40 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   public proceedToCheckout(): void {
-    // First prepare checkout data in the service
-    this.cartService.prepareCheckoutData();
-    
-    // Then navigate to the order page
-    this.router.navigate(['/order']);
+    // Check user role first
+    const userJSON = localStorage.getItem('user');
+    if (!userJSON) {
+      // User not logged in, redirect to login
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userJSON);
+      // Get role_name from nested role_id object
+      const userRole = user.role_id?.role_name;
+
+      // Check if user is staff or admin
+      if (userRole === 'staff' || userRole === 'admin') {
+        // Show error message for staff/admin accounts
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Không thể thanh toán',
+          detail: 'Tài khoản này không được dùng để thanh toán. Vui lòng sử dụng tài khoản khách hàng.',
+          life: 5000
+        });
+        return;
+      }
+
+      // User role is valid (user), proceed with checkout
+      this.cartService.prepareCheckoutData();
+      this.router.navigate(['/order']);
+      
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      // If can't parse user data, redirect to login
+      this.router.navigate(['/login']);
+    }
   }
 
   public continueShopping(): void {
@@ -226,11 +271,6 @@ export class CartComponent implements OnInit, OnDestroy {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
       .format(price)
       .replace(/\s+/g, '');
-  }
-
-  // Helper method to get the API base URL
-  private getApiBaseUrl(): string {
-    return environment.apiBaseUrl;
   }
   
   // Handle image loading errors by setting a placeholder

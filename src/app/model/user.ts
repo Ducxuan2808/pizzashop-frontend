@@ -1,3 +1,6 @@
+import { Membership } from "./membership";
+import { Role } from "./role";
+
 export interface User{
     id: number;
     username: string;
@@ -8,5 +11,6 @@ export interface User{
     address: string;
     date_of_birth: Date;
     is_active: boolean;
-    role_id: number;
+    role_id: Role;
+    membership: Membership;
 }

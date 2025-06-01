@@ -1,4 +1,5 @@
 <app-header></app-header>
+<p-toast position="top-right"></p-toast>
 <div class="cart-page-container">
   <!-- Breadcrumb -->
   <div class="breadcrumb-container">
@@ -42,14 +43,14 @@
           <div *ngFor="let item of cartItems" class="cart-item mb-3">
             <div class="row align-items-center">
               <div class="col-md-2">
-                <img [src]="item.pizza?.url || item.image || 'assets/image/placeholder-pizza.jpg'" 
-                     [alt]="item.name" 
+                <img [src]="item.pizza?.url || 'assets/image/placeholder-pizza.jpg'" 
+                     [alt]="item.pizza?.name || 'Pizza #' + item.pizzaId" 
                      (error)="handleImageError($event)" 
                      class="img-fluid">
               </div>
               <div class="col-md-4">
-                <h5 class="item-name">{{ item.name || 'Pizza' }}</h5>
-                <p class="item-options">Size: {{ item.size || 'Unknown' }}, Loại: {{ item.type || 'Unknown' }}</p>
+                <h5 class="item-name">{{ item.pizza?.name || 'Pizza #' + item.pizzaId }}</h5>
+                <p class="item-options">Size: {{ item.size?.size_name || 'Size #' + item.sizeId }}, Loại: {{ item.type?.base_name || 'Loại #' + item.typeId }}</p>
               </div>
               <div class="col-md-2">
                 <div class="quantity-control">

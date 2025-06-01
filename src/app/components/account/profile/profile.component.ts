@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UserService } from '../../../service/user.service';
+import { TokenService } from '../../../service/token.service';
+import { Router } from '@angular/router';
+import { User } from '../../../model/user';
+import { UpdateUserDTO } from '../../../dtos/user/update.user.dto';
+import { MembershipService } from '../../../service/membership.service';
+import { Membership } from '../../../model/membership';
 
 interface Address {
   id: number;
   recipientName: string;
   phone: string;
-  fullAddress: string; // Đã gộp các trường địa chỉ thành một
+  fullAddress: string;
   isDefault: boolean;
-}
-
-interface User {
-  id: number;
-  fullName: string;
-  email: string;
-  phone: string;
 }
 
 @Component({
@@ -23,33 +23,26 @@ interface User {
   styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
-  user: User = {
-    id: 1,
-    fullName: 'Xuan Nguyen',
-    email: 'xuannguyen@example.com',
-    phone: '0123456789'
-  };
-
-  addresses: Address[] = [
-    {
-      id: 1,
-      recipientName: 'Xuan Nguyen',
-      phone: '0123456789',
-      fullAddress: '70 Lữ Gia, Phường 15, Quận 11, TP.HCM',
-      isDefault: true
-    }
-  ];
-
+  user: any = null;
+  addresses: Address[] = [];
   profileForm!: FormGroup;
   showAlert: boolean = false;
   alertType: 'success' | 'error' = 'success';
   alertMessage: string = '';
+  isLoading: boolean = true;
+  
+  // Add membership data
+  membership: Membership | null = null;
+  isMembershipLoading: boolean = true;
   
   // Popup state
   showAddressPopup: boolean = false;
   editingAddressIndex: number = -1;
   addressForm!: FormGroup;
   
+  // Add a property for confirmation dialog
+  showConfirmDialog: boolean = false;
+
   // Lists for address form
   cities: string[] = ['TP.HCM', 'Hà Nội', 'Đà Nẵng'];
   districts: { [key: string]: string[] } = {
@@ -68,28 +61,133 @@ export class ProfileComponent implements OnInit {
     }
   };
 
-  constructor(private fb: FormBuilder) { }
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService,
+    private tokenService: TokenService,
+    private router: Router,
+    private membershipService: MembershipService
+  ) { }
 
   ngOnInit(): void {
-    this.initForm();
+    this.loadUserData();
     this.initAddressForm();
+    
+    // Load default address if the user has one saved
+    this.addresses = [{
+      id: 1,
+      recipientName: '',
+      phone: '',
+      fullAddress: '',
+      isDefault: true
+    }];
+  }
+
+  loadUserData(): void {
+    this.isLoading = true;
+    const token = this.tokenService.getToken();
+    
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    this.user = this.userService.getUserResponseFromLocalStorage();
+    
+    if (this.user) {
+      this.initForm();
+      this.isLoading = false;
+        // Load membership data
+        this.loadMembershipData();
+      // If we have an address from the user data, update the addresses array
+      if (this.user.address) {
+        this.addresses[0].recipientName = this.user.full_name;
+        this.addresses[0].phone = this.user.phone;
+        this.addresses[0].fullAddress = this.user.address;
+      }
+      
+    
+    } else {
+      // If user data is not in localStorage, fetch it from the server
+      this.userService.getUserDetail(token).subscribe({
+        next: (response: any) => {
+          this.user = response;
+          this.userService.saveUserResponseToLocalStorage(this.user);
+          this.initForm();
+          
+          // If we have an address from the user data, update the addresses array
+          if (this.user.address) {
+            this.addresses[0].recipientName = this.user.full_name;
+            this.addresses[0].phone = this.user.phone;
+            this.addresses[0].fullAddress = this.user.address;
+          }
+          
+          this.isLoading = false;
+          
+          // Load membership data
+          this.loadMembershipData();
+        },
+        error: (error) => {
+          console.error('Error fetching user details:', error);
+          this.showAlertMessage('error', 'Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
+          this.isLoading = false;
+          
+          if (error.status === 401) {
+            this.tokenService.removeToken();
+            this.userService.removeUserFromLocalStorage();
+            this.router.navigate(['/login']);
+          }
+        }
+      });
+    }
+  }
+  
+  loadMembershipData(): void {
+    this.isMembershipLoading = true;
+    debugger
+    
+    if (this.user && this.user.phone) {
+      this.membershipService.getMembershipByUserPhone(this.user.phone).subscribe({
+        next: (response: any) => {
+          debugger
+          this.membership = response.membership;
+          this.isMembershipLoading = false;
+        },
+        error: (error) => {
+          console.error('Error fetching membership data:', error);
+          this.isMembershipLoading = false;
+        }
+      });
+    } else {
+      this.isMembershipLoading = false;
+    }
+  }
+
+  // Format currency method for displaying total spent
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('vi-VN', { 
+      style: 'currency', 
+      currency: 'VND',
+      maximumFractionDigits: 0
+    }).format(amount);
   }
 
   initForm(): void {
     this.profileForm = this.fb.group({
-      fullName: [this.user.fullName, [Validators.required]],
-      email: [this.user.email, [Validators.required, Validators.email]],
-      phone: [{ value: this.user.phone, disabled: true }] // Phone input is disabled
+      fullName: [this.user?.full_name || '', [Validators.required]],
+      email: [this.user?.email || '', [Validators.required, Validators.email]],
+      phone: [this.user?.phone || '', [Validators.required, Validators.pattern(/^[0-9]{10,11}$/)]],
+      address: [this.user?.address || '', [Validators.required]]
     });
   }
   
   initAddressForm(address?: Address): void {
     const defaultAddress = address || {
       id: 0,
-      recipientName: this.user.fullName,
-      phone: this.user.phone,
-      fullAddress: '',
-      isDefault: false
+      recipientName: this.user?.full_name || '',
+      phone: this.user?.phone || '',
+      fullAddress: this.user?.address || '',
+      isDefault: true
     };
     
     this.addressForm = this.fb.group({
@@ -102,21 +200,77 @@ export class ProfileComponent implements OnInit {
 
   updateProfile(): void {
     if (this.profileForm.valid) {
-      const updatedUser = {
-        ...this.user,
-        fullName: this.profileForm.value.fullName,
-        email: this.profileForm.value.email // Now updating email
-      };
-
-      // Simulate API call
-      setTimeout(() => {
-        this.user = updatedUser;
-        this.showAlertMessage('success', 'Thông tin tài khoản đã được cập nhật thành công!');
-      }, 500);
+      // Show confirmation dialog
+      this.showConfirmDialog = true;
     } else {
       this.profileForm.markAllAsTouched();
       this.showAlertMessage('error', 'Vui lòng kiểm tra lại thông tin!');
     }
+  }
+
+  // Method to actually submit the update after confirmation
+  confirmUpdate(): void {
+    const token = this.tokenService.getToken();
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    // Get existing user data from localStorage
+    const existingUser = this.userService.getUserResponseFromLocalStorage();
+    
+    // Create updateUserDTO with data from the form and existing data from localStorage
+    const updateUserDTO: UpdateUserDTO = {
+      full_name: this.profileForm.value.fullName,
+      address: this.profileForm.value.address,
+      date_of_birth: existingUser?.date_of_birth || new Date(),
+      password: '', // Not updating password here
+      retype_password: '' // Not updating password here
+    };
+
+    this.userService.updateUserDetail(token, updateUserDTO).subscribe({
+      next: (response: any) => {
+        // Update the local user object
+        this.user = {
+          ...existingUser,
+          full_name: updateUserDTO.full_name,
+          address: updateUserDTO.address
+        };
+        
+        // Update the addresses array with the new address
+        if (this.addresses.length > 0) {
+          this.addresses[0].recipientName = this.user.full_name;
+          this.addresses[0].phone = this.user.phone;
+          this.addresses[0].fullAddress = updateUserDTO.address;
+        }
+        
+        // Save updated user to localStorage
+        this.userService.saveUserResponseToLocalStorage(this.user);
+        
+        // Hide confirmation dialog
+        this.showConfirmDialog = false;
+        
+        this.showAlertMessage('success', 'Thông tin tài khoản đã được cập nhật thành công!');
+      },
+      error: (error) => {
+        console.error('Error updating user details:', error);
+        this.showAlertMessage('error', 'Không thể cập nhật thông tin. Vui lòng thử lại sau.');
+        
+        // Hide confirmation dialog
+        this.showConfirmDialog = false;
+        
+        if (error.status === 401) {
+          this.tokenService.removeToken();
+          this.userService.removeUserFromLocalStorage();
+          this.router.navigate(['/login']);
+        }
+      }
+    });
+  }
+
+  // Method to cancel update
+  cancelUpdate(): void {
+    this.showConfirmDialog = false;
   }
   
   openAddressPopup(index: number): void {
@@ -150,9 +304,48 @@ export class ProfileComponent implements OnInit {
       
       this.addresses[this.editingAddressIndex] = updatedAddress;
       
-      // Close popup and show success message
-      this.closeAddressPopup();
-      this.showAlertMessage('success', 'Địa chỉ đã được cập nhật thành công!');
+      // Update user address in profile
+      const token = this.tokenService.getToken();
+      if (token && formValue.isDefault) {
+        const updateUserDTO: UpdateUserDTO = {
+          full_name: this.user.full_name,
+          address: formValue.fullAddress,
+          date_of_birth: this.user.date_of_birth || new Date(),
+          password: '', // Not updating password here
+          retype_password: '' // Not updating password here
+        };
+        
+        this.userService.updateUserDetail(token, updateUserDTO).subscribe({
+          next: (response: any) => {
+            // Update local user data
+            this.user = {
+              ...this.user,
+              address: formValue.fullAddress
+            };
+            
+            // Save to localStorage
+            this.userService.saveUserResponseToLocalStorage(this.user);
+            
+            // Close popup and show success message
+            this.closeAddressPopup();
+            this.showAlertMessage('success', 'Địa chỉ đã được cập nhật thành công!');
+          },
+          error: (error) => {
+            console.error('Error updating address:', error);
+            this.showAlertMessage('error', 'Không thể cập nhật địa chỉ. Vui lòng thử lại sau.');
+            
+            if (error.status === 401) {
+              this.tokenService.removeToken();
+              this.userService.removeUserFromLocalStorage();
+              this.router.navigate(['/login']);
+            }
+          }
+        });
+      } else {
+        // Close popup and show success message
+        this.closeAddressPopup();
+        this.showAlertMessage('success', 'Địa chỉ đã được cập nhật thành công!');
+      }
     } else {
       this.addressForm.markAllAsTouched();
     }
@@ -186,5 +379,14 @@ export class ProfileComponent implements OnInit {
 
   closeAlert(): void {
     this.showAlert = false;
+  }
+  
+  logout(): void {
+    // Remove token
+    this.tokenService.removeToken();
+    // Remove user data
+    this.userService.removeUserFromLocalStorage();
+    // Navigate to login page
+    this.router.navigate(['/login']);
   }
 }

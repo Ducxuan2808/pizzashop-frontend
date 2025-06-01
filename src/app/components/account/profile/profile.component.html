@@ -13,8 +13,16 @@
     </div>
   </div>
 
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-warning" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Đang tải thông tin tài khoản...</p>
+  </div>
+
   <!-- Main Content -->
-  <div class="container">
+  <div class="container" *ngIf="!isLoading">
     <div class="row">
       <!-- Left Sidebar -->
       <div class="col-lg-3 col-md-4">
@@ -23,7 +31,7 @@
             <span class="account-icon"><i class="fas fa-user-circle"></i></span>
             <div class="welcome-text">
               <p>TRANG TÀI KHOẢN</p>
-              <p class="welcome-name">Xin chào, <span class="user-name">{{ user.fullName }}</span>!</p>
+              <p class="welcome-name">Xin chào, <span class="user-name">{{ user?.full_name || 'Khách hàng' }}</span>!</p>
             </div>
           </div>
           
@@ -32,7 +40,7 @@
               <li class="active"><a routerLink="/profile"><i class="fas fa-user"></i> Thông tin tài khoản</a></li>
               <li><a routerLink="/myorder"><i class="fas fa-shopping-bag"></i> Đơn hàng của bạn</a></li>
               <li><a routerLink="/changepassword"><i class="fas fa-lock"></i> Đổi mật khẩu</a></li>
-               <li><a href="#" class="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+              <li><a href="javascript:void(0)" (click)="logout()" class="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
             </ul>
           </div>
         </div>
@@ -43,51 +51,118 @@
         <div class="profile-container">
           <h2 class="page-title">Thông tin tài khoản</h2>
           
-          <!-- User Profile Form -->
-          <div class="profile-form-container">
-            <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
-              <div class="form-section">
-                <h3 class="section-title">Thông tin cá nhân</h3>
-                
-                <div class="form-group">
-                  <label for="fullName">Họ và tên <span class="required">*</span></label>
-                  <input type="text" id="fullName" class="form-control" formControlName="fullName">
-                  <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" class="error-message">
-                    Vui lòng nhập họ tên
+          <!-- Row for membership and profile sections -->
+          <div class="row">
+            <!-- Left: User Profile Form -->
+            <div class="col-lg-8">
+              <div class="profile-form-container">
+                <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+                  <div class="form-section">
+                    <h3 class="section-title">Thông tin cá nhân</h3>
+                    
+                    <div class="form-group">
+                      <label for="fullName">Họ và tên <span class="required">*</span></label>
+                      <input type="text" id="fullName" class="form-control" formControlName="fullName">
+                      <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" class="error-message">
+                        Vui lòng nhập họ tên
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="email">Email <span class="required">*</span></label>
+                      <input type="email" id="email" class="form-control" formControlName="email">
+                      <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="error-message">
+                        Vui lòng nhập email hợp lệ
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="phone">Số điện thoại <span class="required">*</span></label>
+                      <input type="tel" id="phone" class="form-control" formControlName="phone">
+                      <div *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" class="error-message">
+                        Vui lòng nhập số điện thoại hợp lệ
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="address">Địa chỉ <span class="required">*</span></label>
+                      <textarea id="address" class="form-control" rows="3" formControlName="address" 
+                        placeholder="Vui lòng nhập đầy đủ địa chỉ (bao gồm số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)"></textarea>
+                      <div *ngIf="profileForm.get('address')?.invalid && profileForm.get('address')?.touched" class="error-message">
+                        Vui lòng nhập địa chỉ đầy đủ
+                      </div>
+                    </div>
                   </div>
+                  
+                  <!-- Submit Button -->
+                  <div class="form-actions">
+                    <button type="submit" class="btn-save" [disabled]="profileForm.invalid">Cập nhật</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Right: Membership Information -->
+            <div class="col-lg-4">
+              <div class="membership-container">
+                <h3 class="section-title">Hạng thành viên</h3>
+                
+                <!-- Loading state -->
+                <div *ngIf="isMembershipLoading" class="membership-loading">
+                  <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p>Đang tải thông tin...</p>
                 </div>
                 
-                <div class="form-group">
-                  <label for="email">Email <span class="required">*</span></label>
-                  <input type="email" id="email" class="form-control" formControlName="email">
-                  <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="error-message">
-                    Vui lòng nhập email hợp lệ
+                <!-- No membership data -->
+                <div *ngIf="!isMembershipLoading && !membership" class="no-membership">
+                  <div class="membership-icon">
+                    <i class="fas fa-user-tag"></i>
                   </div>
+                  <h4>Chưa có thông tin thành viên</h4>
+                  <p>Bạn sẽ trở thành thành viên sau khi thực hiện đơn hàng đầu tiên.</p>
                 </div>
                 
-                <div class="form-group">
-                  <label for="phone">Số điện thoại <span class="required">*</span></label>
-                  <input type="tel" id="phone" class="form-control" formControlName="phone">
-                  <div *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" class="error-message">
-                    Vui lòng nhập số điện thoại hợp lệ
+                <!-- Membership data -->
+                <div *ngIf="!isMembershipLoading && membership" class="membership-info">
+                  <div class="membership-tier" [ngClass]="membership.membership_tier.toLowerCase()">
+                    <div class="tier-icon">
+                      <i *ngIf="membership.membership_tier === 'BRONZE'" class="fas fa-medal text-bronze"></i>
+                      <i *ngIf="membership.membership_tier === 'SILVER'" class="fas fa-medal text-silver"></i>
+                      <i *ngIf="membership.membership_tier === 'GOLD'" class="fas fa-medal text-gold"></i>
+                      <i *ngIf="membership.membership_tier === 'PLATINUM'" class="fas fa-gem text-platinum"></i>
+                    </div>
+                    <div class="tier-name">{{ membership.membership_tier }}</div>
+                  </div>
+                  
+                  <div class="membership-details">
+                    <div class="detail-item">
+                      <div class="detail-label">Tổng chi tiêu:</div>
+                      <div class="detail-value">{{ formatCurrency(membership.total_spent) }}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <div class="detail-label">Tỷ lệ giảm giá:</div>
+                      <div class="detail-value">{{ membership.discount_rate }}%</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Benefits section -->
+                  <div class="membership-benefits">
+                    <h5>Quyền lợi thành viên</h5>
+                    <ul>
+                      <li>Giảm {{ membership.discount_rate }}% cho mỗi đơn hàng</li>
+                      
+                    </ul>
                   </div>
                 </div>
               </div>
-              
-              <!-- Submit Button -->
-              <div class="form-actions">
-                <button type="submit" class="btn-save" [disabled]="profileForm.invalid">Cập nhật</button>
-              </div>
-            </form>
+            </div>
           </div>
           
           <!-- Address Section -->
           <div class="address-section">
-            <div class="section-header">
-              <h3 class="section-title">Địa chỉ của tôi</h3>
-              
-            </div>
-            
             <div class="address-list">
               <div class="address-item" *ngFor="let address of addresses; let i = index">
                 <div class="address-content">
@@ -182,5 +257,264 @@
     </button>
   </div>
 </div>
+
+<!-- Confirmation Dialog -->
+<div class="confirmation-dialog" *ngIf="showConfirmDialog">
+  <div class="dialog-content">
+    <div class="dialog-header">
+      <h3>Xác nhận cập nhật</h3>
+    </div>
+    <div class="dialog-body">
+      <p>Bạn có chắc chắn muốn cập nhật thông tin tài khoản?</p>
+      <div class="user-info-preview">
+        <p><strong>Họ và tên:</strong> {{ profileForm.value.fullName }}</p>
+        <p><strong>Email:</strong> {{ profileForm.value.email }}</p>
+        <p><strong>Số điện thoại:</strong> {{ profileForm.value.phone }}</p>
+        <p><strong>Địa chỉ:</strong> {{ profileForm.value.address }}</p>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-cancel" (click)="cancelUpdate()">Hủy</button>
+      <button class="btn-confirm" (click)="confirmUpdate()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 0;
+  text-align: center;
+}
+
+.loading-container .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+}
+
+.confirmation-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.dialog-body {
+  padding: 20px;
+}
+
+.user-info-preview {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.user-info-preview p {
+  margin: 5px 0;
+}
+
+.dialog-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel {
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  background-color: #ff914d;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-confirm:hover {
+  background-color: #e67e34;
+}
+
+/* Membership styles */
+.membership-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  height: 100%;
+  margin-bottom: 20px;
+}
+
+.membership-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 0;
+  text-align: center;
+}
+
+.no-membership {
+  text-align: center;
+  padding: 30px 10px;
+}
+
+.membership-icon {
+  font-size: 40px;
+  color: #ccc;
+  margin-bottom: 15px;
+}
+
+.no-membership h4 {
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.no-membership p {
+  color: #888;
+}
+
+.membership-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.membership-tier {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.membership-tier.bronze {
+  background-color: #f5e1c9;
+}
+
+.membership-tier.silver {
+  background-color: #eaeaea;
+}
+
+.membership-tier.gold {
+  background-color: #ffefc3;
+}
+
+.membership-tier.platinum {
+  background-color: #e6f7ff;
+}
+
+.tier-icon {
+  font-size: 30px;
+  margin-right: 15px;
+}
+
+.text-bronze {
+  color: #cd7f32;
+}
+
+.text-silver {
+  color: #c0c0c0;
+}
+
+.text-gold {
+  color: #ffd700;
+}
+
+.text-platinum {
+  color: #0099cc;
+}
+
+.tier-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.membership-details {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.detail-label {
+  color: #666;
+}
+
+.detail-value {
+  font-weight: bold;
+  color: #333;
+}
+
+.membership-benefits {
+  margin-top: 5px;
+}
+
+.membership-benefits h5 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.membership-benefits ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.membership-benefits li {
+  margin-bottom: 5px;
+  color: #666;
+}
+
+@media (max-width: 991px) {
+  .membership-container {
+    margin-top: 20px;
+  }
+}
+</style>
 
 <app-footer></app-footer>

@@ -16,7 +16,6 @@ export class TypeService{
     constructor(private http:HttpClient){}
 
     getTypes():Observable<Type[]>{
-        debugger
         return this.http.get<Type[]>(this.apiGetTypes);
     }
     updateSizeDetail(typeId:number){
@@ -24,5 +23,20 @@ export class TypeService{
     }
     getTypesById(typeId:number){
         return this.http.get<Pizza>(`${this.apiGetTypes}/${typeId}`);
+    }
+    
+    // Method to create a new type
+    createType(typeData: any): Observable<any> {
+        return this.http.post<any>(this.apiGetTypes, typeData);
+    }
+    
+    // Method to update an existing type
+    updateType(typeId: number, typeData: any): Observable<any> {
+        return this.http.put<any>(`${this.apiGetTypes}/${typeId}`, typeData);
+    }
+    
+    // Method to delete a type
+    deleteType(typeId: number): Observable<any> {
+        return this.http.delete<any>(`${this.apiGetTypes}/${typeId}`);
     }
 }

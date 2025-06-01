@@ -8,15 +8,20 @@ import { CartItemDTO } from '../../dtos/order/cart.item.dto';
 import { ApiResponse } from '../../responses/api.response';
 import { PaymentService } from '../../service/payment.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { SizeService } from '../../service/size.service';
+import { TypeService } from '../../service/type.service';
+import { Size } from '../../model/size';
+import { Type } from '../../model/type';
+import { PizzaService } from '../../service/pizza.service';
+import { Pizza } from '../../model/pizza';
+import { MessageService } from 'primeng/api';
+import { MembershipService } from '../../service/membership.service';
+import { Membership } from '../../model/membership';
 
-interface CartItemRaw {
-  id: number;
-  name: string;
-  image?: string;
-  size: string;
-  type: string;
-  quantity: number;
-  price: number;
+interface ExtendedCartItem extends CartItem {
+  pizza?: Pizza;
+  size?: Size;
+  type?: Type;
 }
 
 interface OrderCartItem {
@@ -32,11 +37,13 @@ interface OrderCartItem {
   selector: 'app-order',
   standalone: false,
   templateUrl: './order.component.html',
-  styleUrl: './order.component.scss'
+  styleUrl: './order.component.scss',
+  providers: [MessageService]
 })
 export class OrderComponent implements OnInit {
   orderForm: FormGroup;
   checkoutData: CheckoutData | null = null;
+  extendedCartItems: ExtendedCartItem[] = [];
   isLoading = false;
   errorMessage = '';
   hours: number[] = [];
@@ -45,37 +52,25 @@ export class OrderComponent implements OnInit {
   submitting = false;
   selectedPaymentMethod: string = 'cash'; // Default payment method
   paymentService = inject(PaymentService);
-
-  // Maps for size and type IDs
-  private sizeMap: {[key: string]: number} = {
-    's': 1,
-    'm': 2,
-    'l': 3,
-    'small': 1,
-    'medium': 2,
-    'large': 3,
-    'nhỏ': 1,
-    'vừa': 2, 
-    'lớn': 3
-  };
+  sizes: Size[] = [];
+  types: Type[] = [];
+  pizzas: Pizza[] = [];
   
-  private typeMap: {[key: string]: number} = {
-    'thin': 1,
-    'thick': 2, 
-    'regular': 3,
-    'đế mỏng': 1,
-    'đế dày': 2,
-    'đế thường': 3,
-    'mỏng': 1,
-    'dày': 2,
-    'thường': 3
-  };
+  // Membership related properties
+  membership: Membership | null = null;
+  isCheckingMembership = false;
+  discountAmount = 0;
 
   constructor(
     private fb: FormBuilder,
     private cartService: CartService,
     private orderService: OrderService,
     private router: Router,
+    private sizeService: SizeService,
+    private typeService: TypeService,
+    private pizzaService: PizzaService,
+    private messageService: MessageService,
+    private membershipService: MembershipService
   ) {
     // Lấy ngày hiện tại theo múi giờ GMT+7
     this.today = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
@@ -92,10 +87,20 @@ export class OrderComponent implements OnInit {
       paymentMethod: ['cash', [Validators.required]]
     });
 
-    // Generate hours from opening time (8:00) to closing time (21:00)
-    for (let i = 8; i <= 21; i++) {
-      this.hours.push(i);
-    }
+    // Hours will be populated by updateAvailableHours() based on current time
+
+    // Subscribe to phone changes to check membership
+    this.orderForm.get('phone')?.valueChanges.subscribe(phone => {
+      if (phone && phone.length >= 10) {
+        this.checkMembership(phone);
+      } else {
+        this.membership = null;
+        this.discountAmount = 0;
+        if (this.checkoutData) {
+          this.checkoutData.total = this.checkoutData.subtotal + this.checkoutData.shippingFee;
+        }
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -105,10 +110,102 @@ export class OrderComponent implements OnInit {
     // If no checkout data (direct navigation to order page), redirect to cart
     if (!this.checkoutData || this.checkoutData.items.length === 0) {
       this.router.navigate(['/cart']);
+      return;
     }
+    
+    // Load sizes, types, and pizzas 
+    this.loadSizesTypesAndPizzas();
     
     // Try to prefill user data if available
     this.prefillUserData();
+    
+    // Setup time validation
+    this.setupDeliveryTimeValidation();
+  }
+
+  private loadSizesTypesAndPizzas(): void {
+    this.isLoading = true;
+    
+    // Load sizes
+    this.sizeService.getSizes().subscribe({
+      next: (sizes) => {
+        this.sizes = sizes;
+        
+        // Load types
+        this.typeService.getTypes().subscribe({
+          next: (types) => {
+            this.types = types;
+            
+            // Get pizzas for cart items
+            if (this.checkoutData && this.checkoutData.items.length > 0) {
+              const pizzaIds = [...new Set(this.checkoutData.items.map(item => item.pizzaId))];
+              
+              if (pizzaIds.length > 0) {
+                this.pizzaService.getPizzasByIds(pizzaIds).subscribe({
+                  next: (pizzas) => {
+                    this.pizzas = pizzas;
+                    this.enrichCartItems();
+                    this.isLoading = false;
+                  },
+                  error: (error) => {
+                    console.error('Error loading pizzas', error);
+                    this.isLoading = false;
+                    this.enrichCartItems();
+                  }
+                });
+              } else {
+                this.isLoading = false;
+                this.enrichCartItems();
+              }
+            } else {
+              this.isLoading = false;
+            }
+          },
+          error: (error) => {
+            console.error('Error loading types', error);
+            this.isLoading = false;
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading sizes', error);
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  private enrichCartItems(): void {
+    if (!this.checkoutData) return;
+    
+    // Create maps for pizzas, sizes, and types for quick lookup
+    const pizzaMap = new Map<number, Pizza>();
+    this.pizzas.forEach(pizza => {
+      pizzaMap.set(pizza.id, pizza);
+    });
+    
+    const sizeMap = new Map<number, Size>();
+    this.sizes.forEach(size => {
+      sizeMap.set(size.id, size);
+    });
+    
+    const typeMap = new Map<number, Type>();
+    this.types.forEach(type => {
+      typeMap.set(type.id, type);
+    });
+    
+    // Enrich cart items with pizza, size, and type details
+    this.extendedCartItems = this.checkoutData.items.map(item => {
+      const pizza = pizzaMap.get(item.pizzaId);
+      const size = sizeMap.get(item.sizeId);
+      const type = typeMap.get(item.typeId);
+      
+      return {
+        ...item,
+        pizza,
+        size,
+        type
+      };
+    });
   }
 
   formatDate(date: Date): string {
@@ -134,20 +231,53 @@ export class OrderComponent implements OnInit {
 
   // Prefill user data from localStorage if available
   private prefillUserData(): void {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
+    // Check if there's reorder information and use it
+    const reorderInfoString = localStorage.getItem('reorderInfo');
+    if (reorderInfoString) {
       try {
-        const user = JSON.parse(userStr);
-        if (user) {
-          this.orderForm.patchValue({
-            fullName: user.fullName || user.full_name || '',
-            phone: user.phone || user.phoneNumber || '',
-            email: user.email || '',
-            address: user.address || ''
-          });
+        const reorderInfo = JSON.parse(reorderInfoString);
+        
+        // Prefill form with reorder info
+        this.orderForm.patchValue({
+          fullName: reorderInfo.fullName || '',
+          phone: reorderInfo.deliveryPhone || '',
+          email: reorderInfo.email || '',
+          address: reorderInfo.deliveryAddress || '',
+          note: reorderInfo.note || '',
+          paymentMethod: reorderInfo.paymentMethod || 'cash'
+        });
+        
+        // Set selected payment method
+        this.selectedPaymentMethod = reorderInfo.paymentMethod || 'cash';
+        
+        // Remove the reorder info from localStorage after using it
+        localStorage.removeItem('reorderInfo');
+        
+        return; // Exit early, don't try to get user from localStorage
+      } catch (e) {
+        console.error('Error parsing reorder info:', e);
+        localStorage.removeItem('reorderInfo');
+      }
+    }
+    
+    // If no reorder info, try to get user from localStorage
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        this.orderForm.patchValue({
+          fullName: userData.full_name || userData.fullName || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          address: userData.address || userData.delivery_address || ''
+        });
+        
+        // If we have a phone number, check for membership
+        if (userData.phone && userData.phone.length >= 10) {
+          this.checkMembership(userData.phone);
         }
       } catch (e) {
-        console.error('Error parsing user data from localStorage', e);
+        console.error('Error parsing user data:', e);
       }
     }
   }
@@ -157,7 +287,207 @@ export class OrderComponent implements OnInit {
     this.prefillUserData();
   }
 
+  private setupDeliveryTimeValidation(): void {
+    // Listen to delivery date and time changes to validate
+    this.orderForm.get('deliveryDate')?.valueChanges.subscribe(() => {
+      this.updateAvailableHours();
+      this.validateDeliveryTime();
+    });
+
+    this.orderForm.get('deliveryHour')?.valueChanges.subscribe(() => {
+      this.validateDeliveryTime();
+    });
+
+    this.orderForm.get('deliveryMinute')?.valueChanges.subscribe(() => {
+      this.validateDeliveryTime();
+    });
+
+    // Initial validation
+    this.updateAvailableHours();
+  }
+
+  private updateAvailableHours(): void {
+    const now = new Date();
+    const selectedDateStr = this.orderForm.get('deliveryDate')?.value;
+    
+    if (!selectedDateStr) return;
+
+    const selectedDate = new Date(selectedDateStr);
+    const isToday = this.isSameDate(selectedDate, now);
+
+    // Reset hours array
+    this.hours = [];
+
+    if (isToday) {
+      // If today, check current time
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      // If after 21:00 (closing time), no hours available for today
+      if (currentHour >= 21) {
+        this.hours = [];
+        // Auto select tomorrow
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        this.orderForm.patchValue({
+          deliveryDate: this.formatDate(tomorrow)
+        });
+        return;
+      }
+
+      // Calculate minimum hour (current + 1 hour)
+      let minHour = currentHour + 1;
+      
+      // If close to hour boundary (e.g., 20:45), need to add 2 hours
+      if (currentMinute > 45) {
+        minHour = currentHour + 2;
+      }
+
+      // Generate available hours from minHour to 21:00
+      for (let i = Math.max(minHour, 8); i <= 21; i++) {
+        this.hours.push(i);
+      }
+
+      // If no hours available today, auto select tomorrow
+      if (this.hours.length === 0) {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        this.orderForm.patchValue({
+          deliveryDate: this.formatDate(tomorrow)
+        });
+        // Generate hours for tomorrow
+        for (let i = 8; i <= 21; i++) {
+          this.hours.push(i);
+        }
+      }
+    } else {
+      // If not today, show all hours from 8:00 to 21:00
+      for (let i = 8; i <= 21; i++) {
+        this.hours.push(i);
+      }
+    }
+
+    // Clear hour selection if current selected hour is not available
+    const currentHour = this.orderForm.get('deliveryHour')?.value;
+    if (currentHour && !this.hours.includes(parseInt(currentHour))) {
+      this.orderForm.patchValue({
+        deliveryHour: '',
+        deliveryMinute: '00'
+      });
+    }
+  }
+
+  private validateDeliveryTime(): void {
+    const deliveryDate = this.orderForm.get('deliveryDate')?.value;
+    const deliveryHour = this.orderForm.get('deliveryHour')?.value;
+    const deliveryMinute = this.orderForm.get('deliveryMinute')?.value;
+
+    if (!deliveryDate || !deliveryHour || deliveryMinute === null) return;
+
+    const selectedDate = new Date(deliveryDate);
+    const selectedDateTime = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      parseInt(deliveryHour),
+      parseInt(deliveryMinute)
+    );
+
+    const now = new Date();
+    const minDeliveryTime = new Date(now.getTime() + 60 * 60 * 1000); // Current time + 1 hour
+
+    // Check if selected time is valid
+    if (selectedDateTime <= minDeliveryTime) {
+      // Show error message
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Thời gian giao hàng không hợp lệ',
+        detail: 'Thời gian giao hàng phải lớn hơn giờ hiện tại ít nhất 1 tiếng.'
+      });
+
+      // Clear invalid time selection
+      this.orderForm.patchValue({
+        deliveryHour: '',
+        deliveryMinute: '00'
+      });
+    }
+  }
+
+  private isSameDate(date1: Date, date2: Date): boolean {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  }
+
+  private isValidDeliveryTime(): boolean {
+    const deliveryDate = this.orderForm.get('deliveryDate')?.value;
+    const deliveryHour = this.orderForm.get('deliveryHour')?.value;
+    const deliveryMinute = this.orderForm.get('deliveryMinute')?.value;
+
+    if (!deliveryDate || !deliveryHour || deliveryMinute === null) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Lỗi thời gian giao hàng',
+        detail: 'Vui lòng chọn đầy đủ thời gian giao hàng.'
+      });
+      return false;
+    }
+
+    const selectedDate = new Date(deliveryDate);
+    const selectedDateTime = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      parseInt(deliveryHour),
+      parseInt(deliveryMinute)
+    );
+
+    const now = new Date();
+    const minDeliveryTime = new Date(now.getTime() + 60 * 60 * 1000); // Current time + 1 hour
+
+    // Check if selected time is at least 1 hour from now
+    if (selectedDateTime <= minDeliveryTime) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Thời gian giao hàng không hợp lệ',
+        detail: 'Thời gian giao hàng phải lớn hơn giờ hiện tại ít nhất 1 tiếng.'
+      });
+      return false;
+    }
+
+    // Check if delivery time is within business hours (8:00 - 21:00)
+    const deliveryHourNum = parseInt(deliveryHour);
+    if (deliveryHourNum < 8 || deliveryHourNum > 21) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Thời gian giao hàng không hợp lệ',
+        detail: 'Thời gian giao hàng phải trong khung giờ từ 8:00 đến 21:00.'
+      });
+      return false;
+    }
+
+    // Check if it's after closing time today
+    if (this.isSameDate(selectedDate, now) && now.getHours() >= 21) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Quá giờ đặt hàng',
+        detail: 'Hiện tại đã quá giờ đặt hàng. Vui lòng chọn ngày mai để giao hàng.'
+      });
+      return false;
+    }
+
+    return true;
+  }
+
   onSubmit(): void {
+    // Check if user is logged in
+    const currentUser = localStorage.getItem('user');
+    if (!currentUser) {
+      // User is not logged in, redirect to login page
+      this.router.navigate(['/login']);
+      return;
+    }
+
     if (!this.checkoutData) {
       this.errorMessage = 'Không có thông tin giỏ hàng, vui lòng thử lại.';
       return;
@@ -165,6 +495,12 @@ export class OrderComponent implements OnInit {
 
     if (this.orderForm.invalid) {
       this.orderForm.markAllAsTouched();
+      return;
+    }
+
+    // Additional validation for delivery time
+    if (!this.isValidDeliveryTime()) {
+      this.submitting = false;
       return;
     }
 
@@ -196,42 +532,22 @@ export class OrderComponent implements OnInit {
       now.getSeconds()
     );
 
-    // Get raw cart data from localStorage to include all fields
-    const rawCartData = localStorage.getItem('cart');
-    let cartItems: OrderCartItem[] = [];
-    
-    if (rawCartData) {
-      try {
-        const rawItems: CartItemRaw[] = JSON.parse(rawCartData);
-        
-        // Map raw cart items to the format required by the API
-        cartItems = rawItems.map(item => ({
-          pizza_id: item.id,
-          size_id: this.extractSizeId(item.size),
-          base_id: this.extractTypeId(item.type),
-          quantity: item.quantity,
-          price: item.price,
-          note: formValues.note || ''
-        }));
-      } catch (e) {
-        console.error('Error parsing cart data from localStorage', e);
-        // Fallback to using checkout data with less fields
-        if (this.checkoutData && this.checkoutData.items) {
-          cartItems = this.checkoutData.items.map(item => ({
-            pizza_id: item.id,
-            size_id: 1, // Default value if we can't extract from string
-            base_id: 1, // Default value if we can't extract from string
-            quantity: item.quantity,
-            price: item.price,
-            note: formValues.note || ''
-          }));
-        }
-      }
-    }
+    // Map cart items to the format required by the API
+    const cartItems: OrderCartItem[] = this.cartService.getCartItems().map(item => ({
+      pizza_id: item.pizzaId,
+      size_id: item.sizeId,
+      base_id: item.typeId,
+      quantity: item.quantity,
+      price: item.price,
+      note: formValues.note || ''
+    }));
+
+    const userJSON = localStorage.getItem('user');
+    const user = userJSON ? JSON.parse(userJSON) : null;
 
     // Create order DTO with payment method from form and properly formatted dates
     const orderData: OrderDTO = new OrderDTO({
-      user_id: 1, // Fixed user ID as per requirement
+      user_id: user?.id ?? 0, // Fixed user ID as per requirement
       full_name: formValues.fullName,
       order_type: 'Online', // From ENUM('Online', 'Dine-in', 'Takeaway')
       email: formValues.email || '',
@@ -241,7 +557,7 @@ export class OrderComponent implements OnInit {
       note: formValues.note || '',
       total_price: this.checkoutData.total,
       payment_method: formValues.paymentMethod, // Using selected payment method
-      discount_amount: '0',
+      discount_amount: this.discountAmount.toString(),
       order_time: orderTime,
       table_number: 0,
       shipping_time: deliveryTime,
@@ -254,7 +570,6 @@ export class OrderComponent implements OnInit {
 
     // Xử lý riêng cho phương thức thanh toán VNPay
     if (formValues.paymentMethod === 'vnpay') {
-      debugger
       const amount = orderData.total_price || 0;
       
       // Bước 1: Gọi API tạo link thanh toán
@@ -269,10 +584,10 @@ export class OrderComponent implements OnInit {
           window.location.href = paymentUrl;
         },
         error: (err: HttpErrorResponse) => {
-          alert({
-            error: err,
-            defaultMsg: 'Lỗi kết nối đến cổng thanh toán',
-            title: 'Lỗi Thanh Toán'
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Lỗi Thanh Toán',
+            detail: `Lỗi kết nối đến cổng thanh toán.`
           });
         }
       });
@@ -313,19 +628,11 @@ export class OrderComponent implements OnInit {
 
   // Add a method to show success message
   private showSuccessMessage(): void {
-    alert('Đặt hàng thành công! Đơn hàng của bạn đã được ghi nhận và sẽ được giao đến bạn sớm nhất.');
-  }
-  
-  // Helper method to extract size ID from size string
-  private extractSizeId(sizeStr: string): number {
-    const key = sizeStr.toLowerCase();
-    return this.sizeMap[key] || 1; // Default to 1 if not found
-  }
-  
-  // Helper method to extract type ID from type string
-  private extractTypeId(typeStr: string): number {
-    const key = typeStr.toLowerCase();
-    return this.typeMap[key] || 1; // Default to 1 if not found
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Đặt hàng thành công! Đơn hàng của bạn đã được ghi nhận và sẽ được giao đến bạn sớm nhất.'
+    });
   }
 
   // Format price for display
@@ -376,5 +683,82 @@ export class OrderComponent implements OnInit {
     }
   }
 
+  // Add membership discount functionality
+  private checkMembership(phone: string): void {
+    this.isCheckingMembership = true;
+    this.membershipService.getMembershipByUserPhone(phone).subscribe({
+      next: (response: any) => {
+        if (response && response.membership) {
+          this.membership = response.membership;
+          this.calculateDiscount();
+        } else {
+          this.membership = null;
+          this.discountAmount = 0;
+          if (this.checkoutData) {
+            this.checkoutData.total = this.checkoutData.subtotal + this.checkoutData.shippingFee;
+          }
+        }
+        this.isCheckingMembership = false;
+      },
+      error: (error) => {
+        console.error('Error checking membership:', error);
+        this.membership = null;
+        this.discountAmount = 0;
+        if (this.checkoutData) {
+          this.checkoutData.total = this.checkoutData.subtotal + this.checkoutData.shippingFee;
+        }
+        this.isCheckingMembership = false;
+      }
+    });
+  }
 
+  private calculateDiscount(): void {
+    if (this.membership && this.checkoutData) {
+      // Calculate discount based on the subtotal (before shipping fee)
+      this.discountAmount = Math.round(this.checkoutData.subtotal * (this.membership.discount_rate / 100));
+      
+      // Update total in checkout data
+      this.checkoutData.total = this.checkoutData.subtotal - this.discountAmount + this.checkoutData.shippingFee;
+    } else {
+      this.discountAmount = 0;
+      if (this.checkoutData) {
+        this.checkoutData.total = this.checkoutData.subtotal + this.checkoutData.shippingFee;
+      }
+    }
+  }
+
+  /**
+   * Clear all form data
+   */
+  clearForm(): void {
+    // Reset form to initial values
+    this.orderForm.reset({
+      fullName: '',
+      phone: '',
+      email: '',
+      address: '',
+      deliveryDate: this.formatDate(this.today),
+      deliveryHour: '',
+      deliveryMinute: '00',
+      note: '',
+      paymentMethod: 'cash'
+    });
+    
+    // Reset payment method
+    this.selectedPaymentMethod = 'cash';
+    
+    // Clear membership data
+    this.membership = null;
+    this.discountAmount = 0;
+    if (this.checkoutData) {
+      this.checkoutData.total = this.checkoutData.subtotal + this.checkoutData.shippingFee;
+    }
+    
+    // Show success message
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Đã xóa tất cả thông tin đã điền'
+    });
+  }
 }

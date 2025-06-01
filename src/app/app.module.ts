@@ -6,14 +6,16 @@ import { HeaderComponent } from './components/header/header.component';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FooterComponent } from './components/footer/footer.component';
-import { HttpClientModule } from '@angular/common/http';
 import { PizzaComponent } from './components/pizza/pizza.component';
 import { AppRoutingModule } from './app-routing.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppComponent } from './app/app.component';
 import { CommonModule } from '@angular/common';
 import { DOCUMENT } from '@angular/common';
-
+import { 
+  provideHttpClient, 
+  HttpClientModule, 
+  HTTP_INTERCEPTORS } from '@angular/common/http';
 // PrimeNG Modules
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -47,6 +49,12 @@ import { AdminPizzasComponent } from './components/admin/admin-pizzas/admin-pizz
 import { AdminUsersComponent } from './components/admin/admin-users/admin-users.component';
 import { DashboardComponent } from './components/admin/dashboard/dashboard.component';
 import { AdminTablebookingComponent } from './components/admin/admin-tablebooking/admin-tablebooking.component';
+import { TokenInterceptor } from './interceptors/token.interceptor';
+import { MessageService } from 'primeng/api';
+import { AdminMembershipComponent } from './components/admin/admin-membership/admin-membership.component';
+import { AdminTypesComponent } from './components/admin/admin-types/admin-types.component';
+import { AdminSizesComponent } from './components/admin/admin-sizes/admin-sizes.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 
 @NgModule({
   declarations: [
@@ -78,10 +86,15 @@ import { AdminTablebookingComponent } from './components/admin/admin-tablebookin
     AdminPizzasComponent,
     AdminUsersComponent,
     DashboardComponent,
-    AdminTablebookingComponent
+    AdminTablebookingComponent,
+    AdminMembershipComponent,
+    AdminTypesComponent,
+    AdminSizesComponent,
+    ForgotPasswordComponent
   ],
   imports: [
     BrowserModule,
+    ToastModule,
     BrowserAnimationsModule,
     FormsModule,
     HttpClientModule,
@@ -92,12 +105,19 @@ import { AdminTablebookingComponent } from './components/admin/admin-tablebookin
     AppRoutingModule,
     
     // PrimeNG Modules
-    ToastModule,
+   
     ConfirmDialogModule,
     ButtonModule
   ],
   providers: [
-    { provide: DOCUMENT, useFactory: () => document }
+    { //provide: DOCUMENT, 
+      //useFactory: () => document,
+      provide: HTTP_INTERCEPTORS,
+      useClass: TokenInterceptor,
+      multi: true,
+      
+    },
+    MessageService
   ],
   bootstrap: [
     AppComponent,

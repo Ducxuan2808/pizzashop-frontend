@@ -9,12 +9,15 @@ import { SizeService } from '../../service/size.service';
 import { TypeService } from '../../service/type.service';
 import { environment } from '../../environments/environments';
 import { PizzaImage } from '../../model/pizza.image';
+import { ReviewService } from '../../service/review.service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-pizza-detail',
   standalone: false,
   templateUrl: './pizza-detail.component.html',
-  styleUrl: './pizza-detail.component.scss'
+  styleUrl: './pizza-detail.component.scss',
+  providers: [MessageService]
 })
 export class PizzaDetailComponent implements OnInit {
   pizzaId!: number;
@@ -30,13 +33,23 @@ export class PizzaDetailComponent implements OnInit {
   sizes: Size[] = [];
   types: Type[] = [];
   
+  // Reviews related properties
+  pizzaRating: number = 5; // Default rating
+  reviews: any[] = [];
+  isLoadingReviews: boolean = false;
+  reviewError: string = '';
+  reviewCount: number = 0;
+  salesCount: number = 0;
+  
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private pizzaService: PizzaService,
     private cartService: CartService,
     private sizeService: SizeService,
-    private typeService: TypeService
+    private typeService: TypeService,
+    private reviewService: ReviewService,
+    private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
@@ -50,6 +63,11 @@ export class PizzaDetailComponent implements OnInit {
     this.loadSizesAndTypes(() => {
       // After sizes and types are loaded, get the pizza details
       this.getPizza();
+      // Load reviews for this pizza
+      this.getReviews();
+      // Load review count and sales count
+      this.getReviewCount();
+      this.getSalesCount();
     });
   }
 
@@ -96,6 +114,7 @@ export class PizzaDetailComponent implements OnInit {
             response.pizza_images.forEach((pizza_image: PizzaImage) => {
               pizza_image.image_url = `${environment.apiBaseUrl}/pizzas/images/${pizza_image.image_url}`;
             });
+            response.url = response.pizza_images[response.pizza_images.length - 1 ].image_url;
           }
           // Set URL for main image if not already set
           if (!response.url) {
@@ -121,6 +140,68 @@ export class PizzaDetailComponent implements OnInit {
     } else {
       console.error('Invalid pizzaId:', this.pizzaId);
       this.error = 'Invalid pizza ID provided.';
+    }
+  }
+
+  getReviews(): void {
+    if(!isNaN(this.pizzaId)) {
+      this.isLoadingReviews = true;
+      this.reviewError = '';
+      
+      this.reviewService.getReviewByPizzaId([this.pizzaId]).subscribe({
+        next: (reviews: any[]) => {
+          
+          this.reviews = reviews;
+          // Calculate average rating
+          this.pizzaRating = this.calculateAverageRating(this.reviews);
+          this.isLoadingReviews = false;
+        },
+        error: (error: any) => {
+          this.reviewError = 'Failed to load reviews.';
+          this.isLoadingReviews = false;
+          console.error('Error fetching reviews:', error);
+        }
+      });
+    }
+  }
+
+  // Calculate average rating from reviews
+  private calculateAverageRating(reviews: any[]): number {
+    if (!reviews || reviews.length === 0) {
+      return 5; // Default to 5 stars if no reviews
+    }
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return Math.round((sum / reviews.length) * 10) / 10; // Round to 1 decimal place
+  }
+
+  // Format review time to readable date
+  formatReviewDate(reviewTime: any): string {
+    if (!reviewTime) {
+      return '';
+    }
+    
+    try {
+      // If reviewTime is a Date object or can be converted to one
+      const date = new Date(reviewTime);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      }
+      
+      // If reviewTime is an array [year, month, day]
+      if (Array.isArray(reviewTime) && reviewTime.length >= 3) {
+        const [year, month, day] = reviewTime;
+        return `${day}/${month}/${year}`;
+      }
+      
+      // If none of the above, return empty string
+      return '';
+    } catch (error) {
+      console.error('Error formatting review date:', error);
+      return '';
     }
   }
 
@@ -184,21 +265,51 @@ export class PizzaDetailComponent implements OnInit {
     const totalPrice = this.calculateTotalPrice();
     
     const cartItem = {
-      id: this.pizzaId,
-      name: this.pizza.name,
-      image: this.pizza.url,
-      size: this.selectedSize.size_name,
-      type: this.selectedType.base_name,
+      pizzaId: this.pizzaId,
+      sizeId: this.selectedSize.id,
+      typeId: this.selectedType.id,
       quantity: this.quantity,
       price: totalPrice
     };
     
     this.cartService.addToCart(cartItem);
     
-    alert('Pizza added to cart successfully!');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Đã thêm sản phẩm vào giỏ hàng'
+    });
   }
 
   goBack(): void {
     this.router.navigate(['/pizzas']);
+  }
+
+  getReviewCount(): void {
+    if(!isNaN(this.pizzaId)) {
+      this.reviewService.getCountReviewByPizzaId(this.pizzaId).subscribe({
+        next: (count: number) => {
+          this.reviewCount = count;
+        },
+        error: (error: any) => {
+          console.error('Error fetching review count:', error);
+          this.reviewCount = 0;
+        }
+      });
+    }
+  }
+
+  getSalesCount(): void {
+    if(!isNaN(this.pizzaId)) {
+      this.pizzaService.getCountSoldByPizzaId(this.pizzaId).subscribe({
+        next: (count: number) => {
+          this.salesCount = count;
+        },
+        error: (error: any) => {
+          console.error('Error fetching sales count:', error);
+          this.salesCount = 0;
+        }
+      });
+    }
   }
 }

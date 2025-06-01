@@ -110,10 +110,12 @@ export class TablebookingComponent implements OnInit {
       Number(formValues.bookingHour),
       Number(formValues.bookingMinute)
     );
-    
+    const userJSON = localStorage.getItem('user');
+    const user = userJSON ? JSON.parse(userJSON) : null;
+
     // Create the booking DTO to send to the API
     const bookingDTO: TableBookingDTO = {
-      user_id: 1,
+      user_id: user?.id ?? 0,
       name: formValues.fullName,
       phone: formValues.phone,
       number_of_people: formValues.guests,

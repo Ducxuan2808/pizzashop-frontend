@@ -1,5 +1,5 @@
 <app-header></app-header>
-
+<p-toast position="top-right"></p-toast>
 <!-- Hero Section -->
 <section class="hero-section position-relative">
     <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -8,7 +8,7 @@
                 <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&q=80&w=1200&h=500&fit=crop"
                     class="d-block w-100" alt="Pizza">
                 <div class="carousel-caption text-start">
-                    <h1 class="display-4 fw-bold">Thưởng thức Pizza Ngon</h1>
+                    <h1 class="display-4 fw-bold">Thưởng thức Pizza ngon</h1>
                     <p class="lead">Những chiếc bánh pizza thơm ngon với nhiều hương vị độc đáo</p>
                     <div class="mt-4">
                         <a href="#menu" class="btn btn-danger btn-lg rounded-pill px-4 me-2">Đặt hàng ngay</a>
@@ -109,7 +109,7 @@
 <!-- Popular Menu Section -->
 <section class="py-5 bg-light" id="menu">
     <div class="container">
-        <h2 class="section-heading">Món Ăn Phổ Biến</h2>
+        <h2 class="section-heading">Món ăn phổ biến</h2>
         <div class="row g-4">
             <!-- Menu Item 1 -->
             <div class="col-md-6 col-lg-3" *ngFor="let pizza of pizzas">
@@ -210,8 +210,8 @@
             </div> -->
         </div>
 
-        <div class="text-center mt-5">
-            <a  class="btn btn-danger btn-lg rounded-pill px-4">Xem Tất Cả Món</a>
+        <div class="text-center mt-5" routerLink="/pizzas">
+            <a  class="btn btn-danger btn-lg rounded-pill px-4">Xem tất cả món</a>
         </div>
     </div>
 </section>
@@ -253,7 +253,7 @@
                             style="width: 80px; height: 80px;">
                             <i class="fas fa-pizza-slice text-white fa-2x"></i>
                         </div>
-                        <h5 class="card-title">Nguyên Liệu Tươi Ngon</h5>
+                        <h5 class="card-title">Nguyên liệu tươi ngon</h5>
                         <p class="card-text">Chúng tôi chỉ sử dụng những nguyên liệu tươi ngon nhất để đảm bảo chất
                             lượng món ăn.</p>
                     </div>
@@ -268,7 +268,7 @@
                             style="width: 80px; height: 80px;">
                             <i class="fas fa-shipping-fast text-white fa-2x"></i>
                         </div>
-                        <h5 class="card-title">Giao Hàng Nhanh Chóng</h5>
+                        <h5 class="card-title">Giao hàng nhanh chóng</h5>
                         <p class="card-text">Dịch vụ giao hàng nhanh chóng trong vòng 30 phút để món ăn luôn nóng hổi.
                         </p>
                     </div>
@@ -283,7 +283,7 @@
                             style="width: 80px; height: 80px;">
                             <i class="fas fa-utensils text-white fa-2x"></i>
                         </div>
-                        <h5 class="card-title">Công Thức Đặc Biệt</h5>
+                        <h5 class="card-title">Công thức đặc biệt</h5>
                         <p class="card-text">Công thức độc đáo được nghiên cứu và phát triển bởi các đầu bếp lành nghề.
                         </p>
                     </div>
@@ -298,7 +298,7 @@
                             style="width: 80px; height: 80px;">
                             <i class="fas fa-headset text-white fa-2x"></i>
                         </div>
-                        <h5 class="card-title">Dịch Vụ Khách Hàng</h5>
+                        <h5 class="card-title">Dịch vụ khách hàng</h5>
                         <p class="card-text">Đội ngũ nhân viên thân thiện, luôn sẵn sàng phục vụ và hỗ trợ khách hàng.
                         </p>
                     </div>
@@ -311,7 +311,7 @@
 <!-- Testimonials Section -->
 <section class="py-5">
     <div class="container">
-        <h2 class="section-heading">Khách Hàng Nói Gì Về Chúng Tôi</h2>
+        <h2 class="section-heading">Khách hàng nói gì về chúng tôi</h2>
         <div class="row g-4">
             <!-- Testimonial 1 -->
             <div class="col-md-4">
@@ -435,7 +435,7 @@
         
         <!-- Crust Selection -->
         <div class="option-section">
-          <h5>Loại đế</h5>
+          <h5>Phân loại</h5>
           <div class="option-list">
             <div class="option-item" *ngFor="let type of types">
               <input type="radio" 
@@ -452,13 +452,13 @@
         </div>
         
         <!-- Notes -->
-        <div class="option-section">
+        <!-- <div class="option-section">
           <h5>Ghi chú</h5>
           <textarea [value]="orderNote" 
                     (input)="updateOrderNote($event)" 
                     class="form-control" 
                     placeholder="Ghi chú thêm cho món ăn (tùy chọn)"></textarea>
-        </div>
+        </div> -->
         
         <!-- Quantity -->
         <div class="option-section">
@@ -480,6 +480,79 @@
     <div class="popup-footer">
       <button class="btn-cancel" (click)="closePopup()">Hủy</button>
       <button class="btn-add-to-cart" (click)="addToCart()">Thêm vào giỏ hàng</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Chat Widget -->
+<div class="ai-chat-widget" [class.minimized]="isChatMinimized">
+  <div class="chat-header" (click)="toggleChat()">
+    <div class="chat-title">
+      <i class="fas fa-robot"></i>
+      PizZing AI Assistant
+    </div>
+    <div class="chat-controls">
+      <button *ngIf="!isChatMinimized" class="chat-control-btn" (click)="clearChat(); $event.stopPropagation()">
+        <i class="fas fa-trash"></i>
+      </button>
+      <button class="chat-control-btn" (click)="toggleChat(); $event.stopPropagation()">
+        <i class="fas" [ngClass]="isChatMinimized ? 'fa-expand-alt' : 'fa-compress-alt'"></i>
+      </button>
+    </div>
+  </div>
+  
+  <div class="chat-body" *ngIf="!isChatMinimized">
+    <div class="chat-messages">
+      <!-- Quick questions at the top of messages -->
+      <div class="quick-questions" *ngIf="showQuickQuestions">
+        <div class="quick-questions-title">
+          <p>Chọn câu hỏi phổ biến:</p>
+        </div>
+        <div class="quick-question-buttons">
+          <button 
+            *ngFor="let question of quickQuestions" 
+            class="quick-question-btn"
+            (click)="selectQuickQuestion(question)"
+          >
+            {{ question.text }}
+          </button>
+        </div>
+      </div>
+
+      <div class="chat-message welcome-message" *ngIf="chatMessages.length === 0">
+        <div class="message-content assistant">
+          <p>Xin chào! Tôi là PizZing AI Assistant. Tôi có thể giúp gì cho bạn? 🍕</p>
+        </div>
+      </div>
+      
+      <div class="chat-message" *ngFor="let message of chatMessages">
+        <div class="message-content" [ngClass]="message.role">
+          <div class="message-text" [style.white-space]="'pre-wrap'">{{ message.content }}</div>
+          <small class="message-time">{{ message.timestamp | date:'HH:mm' }}</small>
+        </div>
+      </div>
+
+      <div class="chat-message" *ngIf="isLoading">
+        <div class="message-content assistant loading">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-input">
+      <input 
+        type="text" 
+        [(ngModel)]="userMessage" 
+        placeholder="Nhập câu hỏi của bạn..." 
+        (keyup.enter)="sendMessage()"
+      >
+      <button class="chat-send-btn" (click)="sendMessage()" [disabled]="isLoading || !userMessage.trim()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
     </div>
   </div>
 </div>

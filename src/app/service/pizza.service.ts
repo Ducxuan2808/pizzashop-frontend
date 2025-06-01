@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environments';
 import { Pizza } from '../model/pizza';
+import { PizzaDTO } from '../dtos/pizza/pizza.dto';
 
 @Injectable({
     providedIn:'root'
@@ -38,4 +39,33 @@ export class PizzaService{
         debugger
         return this.http.get<Pizza[]>(`${this.apiGetPizzas}/best-seller`);
     }
+
+    worstSellPizzas():Observable<Pizza[]>{
+        debugger
+        return this.http.get<Pizza[]>(`${this.apiGetPizzas}/worst-seller`);
+    }
+    updatePizza(pizzaId: number, pizzaDTO: PizzaDTO): Observable<any> {
+        return this.http.put<any>(`${this.apiGetPizzas}/${pizzaId}`, pizzaDTO);
+    }
+    createPizzaImage(pizzaId: number, file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('files', file, file.name);
+        return this.http.post<any>(
+          `${this.apiGetPizzas}/uploads/${pizzaId}`,
+          formData
+        );
+    }
+    
+    deletePizza(pizzaId: number): Observable<any> {
+        return this.http.delete<any>(`${this.apiGetPizzas}/${pizzaId}`);
+    }
+
+    createPizza(pizzaDTO: PizzaDTO): Observable<any> {
+        return this.http.post<any>(`${this.apiGetPizzas}`, pizzaDTO);
+    }
+
+    getCountSoldByPizzaId(pizzaId:number):Observable<any>{
+        return this.http.get(`${environment.apiBaseUrl}/pizzas/count-sold/${pizzaId}`);
+    }
+
 }

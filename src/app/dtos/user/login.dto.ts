@@ -7,7 +7,7 @@ import{
 }from 'class-validator';
 export class LoginDTO{
     @IsPhoneNumber()
-    phone_number : string;
+    phone : string;
 
     @IsString()
     @IsNotEmpty()
@@ -15,7 +15,7 @@ export class LoginDTO{
 
 
     constructor(data: any){
-        this.phone_number = data.phone_number;
+        this.phone = data.phone;
         this.password = data.password;
 
     }

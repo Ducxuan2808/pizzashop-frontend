@@ -39,7 +39,6 @@ export class OrderService{
     }
     
     updateOrder(orderId:number, orderData:OrderDTO): Observable<any>{
-        debugger;
         const url =  `${environment.apiBaseUrl}/orders/${orderId}`;
         return this.http.put(url,orderData);
     }
@@ -52,5 +51,13 @@ export class OrderService{
     // Create new order
     createOrder(orderData: OrderDTO): Observable<any> {
         return this.http.post<any>(this.apiPlaceOrder, orderData);
+    }
+
+    getOrdersByUserId(user_id: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/user/${user_id}`);
+    }
+
+    getUserOrderCanceled(user_id: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/user/order-cancelled/${user_id}`);
     }
 }

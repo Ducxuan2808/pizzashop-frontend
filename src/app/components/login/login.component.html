@@ -1,5 +1,5 @@
-
 <app-header></app-header>
+<p-toast position="top-right"></p-toast>
 
 <div class="login-page">
   <!-- Breadcrumb -->
@@ -21,23 +21,54 @@
         <div class="login-container">
           <h2 class="form-title">Đăng nhập</h2>
           
-          <form class="login-form">
+          <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+          </div>
+          
+          <form class="login-form" (ngSubmit)="login()">
             <div class="form-group">
               <label for="phone">Số điện thoại <span class="required">*</span></label>
-              <input type="tel" id="phone" class="form-control" placeholder="Nhập số điện thoại">
+              <input 
+                type="tel" 
+                id="phone" 
+                name="phone"
+                class="form-control" 
+                placeholder="Nhập số điện thoại"
+                [(ngModel)]="phone"
+                required>
             </div>
             
             <div class="form-group">
               <label for="password">Mật khẩu <span class="required">*</span></label>
-              <input type="password" id="password" class="form-control" placeholder="Mật khẩu">
+              <div class="password-input-container">
+                <input 
+                  [type]="showPassword ? 'text' : 'password'" 
+                  id="password" 
+                  name="password"
+                  class="form-control" 
+                  placeholder="Mật khẩu"
+                  [(ngModel)]="password"
+                  required>
+                <button 
+                  type="button" 
+                  class="password-toggle-btn"
+                  (click)="togglePasswordVisibility()">
+                  <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
             </div>
             
             <div class="form-group d-flex justify-content-between align-items-center">
               <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="remember">
+                <input 
+                  type="checkbox" 
+                  class="form-check-input" 
+                  id="remember"
+                  name="rememberMe"
+                  [(ngModel)]="rememberMe">
                 <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
               </div>
-              <a href="#" class="forgot-password">Quên mật khẩu</a>
+              <a routerLink="/forgot-password" class="forgot-password">Quên mật khẩu</a>
             </div>
             
             <button type="submit" class="btn-login">Đăng nhập</button>

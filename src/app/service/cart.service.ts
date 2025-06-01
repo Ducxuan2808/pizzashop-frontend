@@ -2,11 +2,9 @@ import { Injectable } from '@angular/core';
 import { Subject, BehaviorSubject } from 'rxjs';
 
 export interface CartItem {
-  id: number;
-  name: string;
-  image?: string;
-  size: string;
-  type: string;
+  pizzaId: number;
+  sizeId: number;
+  typeId: number;
   quantity: number;
   price: number;
 }
@@ -24,6 +22,7 @@ export interface CheckoutData {
 export class CartService {
   private cartItems: CartItem[] = [];
   cartUpdated = new Subject<void>();
+  private previousUserId: string | null = null;
   
   // Checkout data for order page
   private checkoutDataSubject = new BehaviorSubject<CheckoutData | null>(null);
@@ -34,17 +33,63 @@ export class CartService {
 
   constructor() {
     this.loadCartFromStorage();
+    // Check for user changes periodically to handle login/logout
+    this.setupUserChangeDetection();
+  }
+
+  // Setup periodic check for user changes
+  private setupUserChangeDetection(): void {
+    // Check every 2 seconds if the user has changed
+    setInterval(() => {
+      const currentUserId = this.getUserId();
+      if (this.previousUserId !== currentUserId) {
+        // User has changed, reload cart
+        this.previousUserId = currentUserId;
+        this.loadCartFromStorage();
+      }
+    }, 2000);
+  }
+
+  private getUserId(): string | null {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        return userData.id?.toString();
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private getCartKey(): string {
+    const userId = this.getUserId();
+    return userId ? `cart_${userId}` : 'cart_guest';
   }
 
   private loadCartFromStorage(): void {
-    const cartData = localStorage.getItem('cart');
+    const cartKey = this.getCartKey();
+    const cartData = localStorage.getItem(cartKey);
     if (cartData) {
-      this.cartItems = JSON.parse(cartData);
+      try {
+        this.cartItems = JSON.parse(cartData);
+        console.log(`Loaded cart for ${cartKey}:`, this.cartItems);
+      } catch (error) {
+        console.error(`Error parsing cart data for ${cartKey}:`, error);
+        this.cartItems = [];
+      }
+    } else {
+      this.cartItems = [];
     }
+    // Notify subscribers that cart has been updated
+    this.cartUpdated.next();
   }
 
   private saveCartToStorage(): void {
-    localStorage.setItem('cart', JSON.stringify(this.cartItems));
+    const cartKey = this.getCartKey();
+    localStorage.setItem(cartKey, JSON.stringify(this.cartItems));
     this.cartUpdated.next();
   }
 
@@ -55,9 +100,9 @@ export class CartService {
   addToCart(item: CartItem): void {
     const existingItemIndex = this.cartItems.findIndex(
       cartItem => 
-        cartItem.id === item.id && 
-        cartItem.size === item.size && 
-        cartItem.type === item.type
+        cartItem.pizzaId === item.pizzaId && 
+        cartItem.sizeId === item.sizeId && 
+        cartItem.typeId === item.typeId
     );
 
     if (existingItemIndex >= 0) {
@@ -69,16 +114,16 @@ export class CartService {
     this.saveCartToStorage();
   }
 
-  updateItemQuantity(itemId: number, quantity: number): void {
-    const index = this.cartItems.findIndex(item => item.id === itemId);
+  updateItemQuantity(pizzaId: number, quantity: number): void {
+    const index = this.cartItems.findIndex(item => item.pizzaId === pizzaId);
     if (index >= 0) {
       this.cartItems[index].quantity = quantity;
       this.saveCartToStorage();
     }
   }
 
-  removeItem(itemId: number): void {
-    this.cartItems = this.cartItems.filter(item => item.id !== itemId);
+  removeItem(pizzaId: number): void {
+    this.cartItems = this.cartItems.filter(item => item.pizzaId !== pizzaId);
     this.saveCartToStorage();
   }
 
@@ -93,6 +138,11 @@ export class CartService {
 
   getTotalPrice(): number {
     return this.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
+  
+  // Method to manually refresh cart data (can be called after login/logout)
+  refreshCart(): void {
+    this.loadCartFromStorage();
   }
   
   // Method to prepare checkout data for the order page
@@ -135,7 +185,6 @@ export class CartService {
   
   // Method to clear checkout data after order is placed
   clearCheckoutData(): void {
-    debugger
     sessionStorage.removeItem('checkoutData');
     this.checkoutDataSubject.next(null);
   }
@@ -154,6 +203,60 @@ export class CartService {
       };
       this.checkoutDataSubject.next(updatedData);
       sessionStorage.setItem('checkoutData', JSON.stringify(updatedData));
+    }
+  }
+
+  // Method to merge guest cart with user cart after login
+  mergeGuestCartWithUserCart(): void {
+    const guestCartData = localStorage.getItem('cart_guest');
+    if (guestCartData) {
+      try {
+        const guestCartItems: CartItem[] = JSON.parse(guestCartData);
+        if (guestCartItems.length > 0) {
+          // Get current user cart
+          const userId = this.getUserId();
+          if (userId) {
+            const userCartData = localStorage.getItem(`cart_${userId}`);
+            let userCartItems: CartItem[] = [];
+            
+            if (userCartData) {
+              userCartItems = JSON.parse(userCartData);
+            }
+            
+            // Merge guest cart items with user cart
+            guestCartItems.forEach(guestItem => {
+              const existingItemIndex = userCartItems.findIndex(
+                userItem => 
+                  userItem.pizzaId === guestItem.pizzaId && 
+                  userItem.sizeId === guestItem.sizeId && 
+                  userItem.typeId === guestItem.typeId
+              );
+              
+              if (existingItemIndex >= 0) {
+                // Item already exists in user cart, add quantities
+                userCartItems[existingItemIndex].quantity += guestItem.quantity;
+              } else {
+                // Add new item to user cart
+                userCartItems.push({ ...guestItem });
+              }
+            });
+            
+            // Save merged cart to user's cart
+            localStorage.setItem(`cart_${userId}`, JSON.stringify(userCartItems));
+            
+            // Remove guest cart
+            localStorage.removeItem('cart_guest');
+            
+            // Update current cart items and notify subscribers
+            this.cartItems = userCartItems;
+            this.cartUpdated.next();
+            
+            console.log('Guest cart merged with user cart successfully');
+          }
+        }
+      } catch (error) {
+        console.error('Error merging guest cart with user cart:', error);
+      }
     }
   }
 } 

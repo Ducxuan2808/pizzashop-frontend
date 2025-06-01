@@ -1,5 +1,6 @@
 <app-header></app-header>
 <div class="order-page-container">
+  <p-toast position="top-right"></p-toast>
   <!-- Breadcrumb -->
   <div class="breadcrumb-container">
     <div class="container">
@@ -51,9 +52,14 @@
             <div class="form-section">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">Thông tin khách hàng</h3>
-                <button type="button" class="btn btn-outline-primary btn-sm" (click)="fillWithUserProfile()" style="color: #ff6b00; border-color: #ff6b00;">
-                  <i class="fas fa-user-circle"></i> Sử dụng thông tin cá nhân
-                </button>
+                <div class="action-buttons">
+                  <button type="button" class="btn btn-outline-primary btn-sm me-2" (click)="fillWithUserProfile()" style="color: #ff6b00; border-color: #ff6b00;">
+                    <i class="fas fa-user-circle"></i> Sử dụng thông tin cá nhân
+                  </button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearForm()">
+                    <i class="fas fa-trash-alt"></i> Xóa thông tin
+                  </button>
+                </div>
               </div>
               <div class="row">
                 <div class="col-md-6 mb-3">
@@ -117,6 +123,16 @@
                   <div *ngIf="orderForm.get('deliveryHour')?.invalid && orderForm.get('deliveryHour')?.touched" class="text-danger">
                     <small>Vui lòng chọn giờ giao hàng</small>
                   </div>
+                  <div class="mt-2">
+                    <small class="text-muted">
+                      <i class="fas fa-info-circle me-1"></i>
+                      Thời gian giao hàng phải lớn hơn giờ hiện tại ít nhất 1 tiếng. 
+                      Khung giờ hoạt động: 8:00 - 21:00.
+                      <span *ngIf="hours.length === 0" class="text-warning">
+                        Hiện tại đã quá giờ đặt hàng trong ngày, vui lòng chọn ngày mai.
+                      </span>
+                    </small>
+                  </div>
                 </div>
               </div>
             </div>
@@ -172,13 +188,13 @@
         <div class="order-summary">
           <h3 class="summary-title">Đơn hàng của bạn</h3>
           <div class="order-items">
-            <div *ngFor="let item of checkoutData.items" class="order-item">
+            <div *ngFor="let item of extendedCartItems" class="order-item">
               <div class="item-info">
                 <div class="item-name-row">
-                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-name">{{ item.pizza?.name || 'Pizza #' + item.pizzaId }}</span>
                   <span class="item-quantity">x {{ item.quantity }}</span>
                 </div>
-                <span class="item-options">Size: {{ item.size }}, Loại: {{ item.type }}</span>
+                <span class="item-options">Size: {{ item.size?.size_name || 'Size #' + item.sizeId }}, Loại: {{ item.type?.base_name || 'Loại #' + item.typeId }}</span>
               </div>
               <div class="item-price">{{ formatPrice(item.price * item.quantity) }}</div>
             </div>
@@ -187,6 +203,14 @@
             <div class="summary-row">
               <span>Tạm tính</span>
               <span>{{ formatPrice(checkoutData.subtotal) }}</span>
+            </div>
+            <!-- Membership discount -->
+            <div class="summary-row" *ngIf="membership">
+              <span>
+                Giảm giá ({{ membership.discount_rate }}%)
+                <span class="membership-badge">{{ membership.membership_tier }}</span>
+              </span>
+              <span class="discount-amount">-{{ formatPrice(discountAmount) }}</span>
             </div>
             <div class="summary-row">
               <span>Phí vận chuyển</span>

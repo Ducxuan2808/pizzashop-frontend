@@ -1,6 +1,7 @@
 <app-header></app-header>
 
 <div class="pizza-detail-page">
+  <p-toast position="top-right"></p-toast>
   <!-- Breadcrumb -->
   <div class="breadcrumb-container">
     <div class="container">
@@ -50,8 +51,20 @@
           <div class="product-info">
             <h1 class="product-name">{{ pizza?.name }}</h1>
             
+            <!-- Add Star Rating Display below name -->
+            <div class="product-rating">
+              <div class="stars">
+                <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= pizzaRating">
+                  ★
+                </span>
+              </div>
+              <span class="rating-value">{{ pizzaRating }}/5</span>
+              <span class="rating-count">({{ reviewCount }} đánh giá)</span>
+              <span class="sales-count">• {{ salesCount }} đã bán</span>
+            </div>
+            
             <div class="product-pricing">
-              <div class="current-price">{{ calculateTotalPrice() | currency:'VND':'symbol':'1.0-0' }}</div>
+              <div class="current-price">{{ calculateTotalPrice() | number:'1.0-0' }} đ</div>
             </div>
 
 
@@ -68,14 +81,14 @@
                     [class.active]="selectedSize && selectedSize.id === size.id" 
                     (click)="selectSize(size)">
                     <span class="option-name">{{ size.size_name }}</span>
-                    <span class="option-price" *ngIf="size.price_multiplier > 1">+{{ (pizza?.base_price || 0) * (size.price_multiplier - 1) | currency:'VND':'symbol':'1.0-0' }}</span>
+                    <span class="option-price" *ngIf="size.price_multiplier > 1">+{{ (pizza?.base_price || 0) * (size.price_multiplier - 1) | number:'1.0-0' }} đ</span>
                   </div>
                 </div>
               </div>
               
               <!-- Crust Type Selection -->
               <div class="option-group">
-                <h4 class="option-title">Đế bánh</h4>
+                <h4 class="option-title">Phân loại</h4>
                 <div class="option-items">
                   <div 
                     *ngFor="let type of (pizza?.crusts && pizza.crusts.length > 0 ? pizza.crusts : types)" 
@@ -83,7 +96,7 @@
                     [class.active]="selectedType && selectedType.id === type.id" 
                     (click)="selectType(type)">
                     <span class="option-name">{{ type.base_name }}</span>
-                    <span class="option-price" *ngIf="type.price > 0">+{{ type.price | currency:'VND':'symbol':'1.0-0' }}</span>
+                    <span class="option-price" *ngIf="type.price > 0">+{{ type.price | number:'1.0-0' }} đ</span>
                   </div>
                 </div>
               </div>
@@ -110,7 +123,7 @@
               </div>
               
               <!-- Note Input -->
-              <div class="option-group">
+              <!-- <div class="option-group">
                 <h4 class="option-title">Ghi chú</h4>
                 <textarea 
                   class="note-input" 
@@ -118,7 +131,7 @@
                   [value]="orderNote"
                   (input)="updateOrderNote($event)"
                   rows="3"></textarea>
-              </div>
+              </div> -->
             </div>
             
             <!-- Add to Cart Button -->
@@ -138,6 +151,55 @@
         <h3 class="description-title">Mô tả món ăn</h3>
         <div class="description-content">
           <p>{{pizza?.description || ''}}</p>
+
+          <!-- Add Reviews Section after product description -->
+      <div class="product-reviews" *ngIf="!isLoading && !error && pizza">
+        <h3 class="reviews-title">Đánh giá từ khách hàng</h3>
+        
+        <!-- Loading indicator for reviews -->
+        <div *ngIf="isLoadingReviews" class="loading-reviews">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading reviews...</span>
+          </div>
+          <span>Đang tải đánh giá...</span>
+        </div>
+        
+        <!-- Error message for reviews -->
+        <div *ngIf="reviewError" class="reviews-error alert alert-warning">
+          {{ reviewError }}
+        </div>
+        
+        <!-- No reviews message -->
+        <div *ngIf="!isLoadingReviews && (!reviews || reviews.length === 0)" class="no-reviews">
+          <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+        </div>
+        
+        <!-- Reviews list -->
+        <div class="reviews-list" *ngIf="!isLoadingReviews && reviews && reviews.length > 0">
+          <div class="review-item" *ngFor="let review of reviews">
+            <div class="review-header">
+              <div class="reviewer-info">
+                <div class="reviewer-avatar">
+                  <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="User avatar">
+                </div>
+                <div class="reviewer-details">
+                  <h4 class="reviewer-name">{{ review.user_id?.full_name || 'Khách hàng' }}</h4>
+                  <div class="review-date">{{ formatReviewDate(review.review_time) }}</div>
+                </div>
+              </div>
+              <div class="review-rating">
+                <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= review.rating">
+                  ★
+                </span>
+                <span class="rating-value">{{ review.rating }}/5</span>
+              </div>
+            </div>
+            <div class="review-content">
+              <p>{{ review.comment }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
           
           <h2>1. Ăn vỏ bánh trước tiên: Nhóm người tạo ảnh hưởng, thích sự khác biệt</h2>
           <p>Đây là kiểu người thường bắt đầu ăn pizza bằng cách cắn phần vỏ bánh trước, sau đó mới ăn đến phần nhân (ăn phần rìa của bánh pizza trước). Cách ăn này khá "lạ", không giống với đa số mọi người nên đôi khi bạn sẽ bắt gặp những ánh mắt ngạc nhiên nhìn mình đấy.</p>
@@ -170,7 +232,7 @@
         </div>
       </div>
       
- 
+      
     </div>
   </div>
 </div>

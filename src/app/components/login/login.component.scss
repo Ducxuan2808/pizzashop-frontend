@@ -114,6 +114,40 @@
               text-decoration: underline;
             }
           }
+
+          .password-input-container {
+            position: relative;
+  
+            .password-toggle-btn {
+              position: absolute;
+              right: 12px;
+              top: 50%;
+              transform: translateY(-50%);
+              background: none;
+              border: none;
+              cursor: pointer;
+              color: #888;
+              font-size: 16px;
+              padding: 0;
+              width: 20px;
+              height: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+  
+              &:hover {
+                color: #ff6b00;
+              }
+  
+              &:focus {
+                outline: none;
+              }
+            }
+  
+            input {
+              padding-right: 45px !important;
+            }
+          }
         }
   
         .btn-login {
@@ -214,4 +248,165 @@
       }
     }
   }
+  //thong bao bat dau
+/* Toast notification styles */
+:host ::ng-deep {
+  .p-toast {
+    opacity: 1 !important;
+    
+    .p-toast-message {
+      margin: 0 0 1rem 0;
+      padding: 0;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      transition: transform 0.3s, opacity 0.3s;
+      animation: slideIn 0.3s ease-out;
+      
+      .p-toast-message-content {
+        padding: 1rem;
+        display: flex;
+        align-items: flex-start;
+        border-width: 0;
+        border-left-width: 6px;
+        border-style: solid;
+        
+        .p-toast-message-icon {
+          font-size: 1.5rem;
+          margin-right: 0.75rem;
+        }
+        
+        .p-toast-message-text {
+          flex: 1;
+          
+          .p-toast-summary {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+          }
+          
+          .p-toast-detail {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.9;
+          }
+        }
+        
+        .p-toast-icon-close {
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 50%;
+          background: transparent;
+          transition: background-color 0.2s;
+          
+          &:hover {
+            background: rgba(0, 0, 0, 0.1);
+          }
+        }
+      }
+      
+      &.p-toast-message-success {
+        background-color: #e8f5e9;
+        
+        .p-toast-message-content {
+          border-left-color: #4caf50;
+          
+          .p-toast-message-icon,
+          .p-toast-summary {
+            color: #2e7d32;
+          }
+          
+          .p-toast-detail {
+            color: #1b5e20;
+          }
+        }
+      }
+      
+      &.p-toast-message-info {
+        background-color: #e3f2fd;
+        
+        .p-toast-message-content {
+          border-left-color: #2196f3;
+          
+          .p-toast-message-icon,
+          .p-toast-summary {
+            color: #1565c0;
+          }
+          
+          .p-toast-detail {
+            color: #0d47a1;
+          }
+        }
+      }
+      
+      &.p-toast-message-warn {
+        background-color: #fff8e1;
+        
+        .p-toast-message-content {
+          border-left-color: #ffc107;
+          
+          .p-toast-message-icon,
+          .p-toast-summary {
+            color: #ff8f00;
+          }
+          
+          .p-toast-detail {
+            color: #e65100;
+          }
+        }
+      }
+      
+      &.p-toast-message-error {
+        background-color: #ffebee;
+        
+        .p-toast-message-content {
+          border-left-color: #f44336;
+          
+          .p-toast-message-icon,
+          .p-toast-summary {
+            color: #d32f2f;
+          }
+          
+          .p-toast-detail {
+            color: #b71c1c;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.btn-danger {
+  background-color: #f44336;
   
+  &:hover {
+    background-color: #d32f2f;
+  }
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  font-weight: 500;
+}

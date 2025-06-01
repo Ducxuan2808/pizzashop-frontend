@@ -1,5 +1,6 @@
 <app-header></app-header>
 <div class="pizza-page-container">
+  <p-toast position="top-right"></p-toast>
   <!-- Breadcrumb -->
   <div class="breadcrumb-container">
     <div class="container">
@@ -18,23 +19,18 @@
       <!-- Sidebar Filters -->
       <div class="col-lg-3">
         <div class="filter-container">
-          <h5 class="filter-title">Danh mục sản phẩm</h5>
-          <ul class="category-list">
-            <li><a href="/">Trang chủ</a></li>
-            <li><a href="/gioi-thieu">Giới thiệu</a></li>
-            <li class="has-submenu">
-              <a href="/san-pham">Sản phẩm</a>
-            </li>
-            <li><a href="/tin-tuc">Tin tức</a></li>
-            <li><a href="/lien-he">Liên hệ</a></li>
-            <li><a href="/faq">Câu hỏi thường gặp</a></li>
-            <li><a href="/dat-ban">Đặt bàn</a></li>
-          </ul>
+          
 
           <div class="filter-box mt-4">
             <h5 class="filter-title">Bộ lọc sản phẩm</h5>
             <div class="filter-selected">
               <span>Bạn chọn</span>
+              <div class="selected-filters" *ngIf="priceRange">
+                <div class="selected-filter-item">
+                  <span>Giá: {{ getPriceRangeLabel() }}</span>
+                  <button class="remove-filter" (click)="clearPriceFilter()">×</button>
+                </div>
+              </div>
             </div>
 
             <!-- Price Filter -->
@@ -42,49 +38,49 @@
               <h6 class="filter-subtitle">Chọn mức giá</h6>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-0-100000" 
-                  (click)="minPrice=0; maxPrice=100000; searchPizzas()">
+                  (click)="priceRange='0-100000'; applyFilters()">
                 <label class="form-check-label" for="price-0-100000">
                   Dưới 100.000đ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-100000-200000"
-                  (click)="minPrice=100000; maxPrice=200000; searchPizzas()">
+                  (click)="priceRange='100000-200000'; applyFilters()">
                 <label class="form-check-label" for="price-100000-200000">
                   Từ 100.000đ - 200.000đ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-200000-300000"
-                  (click)="minPrice=200000; maxPrice=300000; searchPizzas()">
+                  (click)="priceRange='200000-300000'; applyFilters()">
                 <label class="form-check-label" for="price-200000-300000">
                   Từ 200.000đ - 300.000đ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-300000-500000"
-                  (click)="minPrice=300000; maxPrice=500000; searchPizzas()">
+                  (click)="priceRange='300000-500000'; applyFilters()">
                 <label class="form-check-label" for="price-300000-500000">
                   Từ 300.000đ - 500.000đ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-500000-1000000"
-                  (click)="minPrice=500000; maxPrice=1000000; searchPizzas()">
+                  (click)="priceRange='500000-1000000'; applyFilters()">
                 <label class="form-check-label" for="price-500000-1000000">
                   Từ 500.000đ - 1 triệu
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-1000000-max"
-                  (click)="minPrice=1000000; maxPrice=10000000; searchPizzas()">
+                  (click)="priceRange='1000000-10000000'; applyFilters()">
                 <label class="form-check-label" for="price-1000000-max">
                   Trên 1 triệu
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="priceRange" id="price-all" checked
-                  (click)="minPrice=0; maxPrice=10000000; searchPizzas()">
+                  (click)="priceRange=''; applyFilters()">
                 <label class="form-check-label" for="price-all">
                   Tất cả mức giá
                 </label>
@@ -137,11 +133,25 @@
                 <h3 class="pizza-title">
                   <a href="javascript:void(0)" (click)="onPizzaClick(pizza.id)">{{ pizza.name }}</a>
                 </h3>
+                <div class="pizza-rating">
+                  <div class="stars">
+                    <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= getRating(pizza.id)">
+                      ★
+                    </span>
+                  </div>
+                  <span class="rating-value">{{ getRating(pizza.id) }}/5</span>
+                  <span class="sales-count">• {{ getSalesCount(pizza.id) }} đã bán</span>
+                </div>
                 <p class="pizza-description">
                   {{ pizza.description.length > 100 ? (pizza.description.substring(0, 100) + '...') : pizza.description }}
                 </p>
                 <div class="pizza-price">Giá chỉ từ {{ formatPrice(pizza.base_price) }}</div>
-                <button class="btn-add-to-cart" (click)="openPopup(pizza); $event.stopPropagation()">Thêm</button>
+                <div class="pizza-actions">
+                  <button class="btn-add-to-cart" (click)="openPopup(pizza); $event.stopPropagation()">Thêm</button>
+                  <button class="btn-view-reviews" (click)="openReviewModal(pizza); $event.stopPropagation()">
+                    <i class="fas fa-star"></i> Xem đánh giá
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -156,8 +166,8 @@
                   <span aria-hidden="true">&laquo;</span>
                 </a>
               </li>
-              <li class="page-item" *ngFor="let page of visiblePages" [class.active]="page === currentPage + 1">
-                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page - 1)">{{ page }}</a>
+              <li class="page-item" *ngFor="let page of visiblePages" [class.active]="page === currentPage">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page)">{{ page + 1 }}</a>
               </li>
               <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
                 <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage + 1)" aria-label="Next">
@@ -221,7 +231,7 @@
         
         <!-- Crust Selection -->
         <div class="option-section">
-          <h5>Loại đế</h5>
+          <h5>Phân loại</h5>
           <div class="option-list">
             <div class="option-item" *ngFor="let type of types">
               <input type="radio" 
@@ -238,13 +248,13 @@
         </div>
         
         <!-- Notes -->
-        <div class="option-section">
+        <!-- <div class="option-section">
           <h5>Ghi chú</h5>
           <textarea [value]="orderNote" 
                     (input)="updateOrderNote($event)" 
                     class="form-control" 
                     placeholder="Ghi chú thêm cho món ăn (tùy chọn)"></textarea>
-        </div>
+        </div> -->
         
         <!-- Quantity -->
         <div class="option-section">
@@ -267,6 +277,76 @@
       <button class="btn-cancel" (click)="closePopup()">Hủy</button>
       <button class="btn-add-to-cart" (click)="addToCart()">Thêm vào giỏ hàng</button>
     </div>
+  </div>
+</div>
+
+<!-- Reviews Modal -->
+<div class="review-modal-overlay" *ngIf="reviewModalVisible" (click)="closeReviewModal()">
+  <div class="review-modal-content" (click)="$event.stopPropagation()">
+    <div class="review-modal-header">
+      <h3>Đánh giá sản phẩm: {{ selectedPizzaForReview?.name }}</h3>
+      <button class="review-modal-close" (click)="closeReviewModal()">&times;</button>
+    </div>
+    <div class="review-modal-body">
+      <!-- Loading indicator -->
+      <div *ngIf="isLoadingReviews" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Đang tải...</span>
+        </div>
+        <p class="mt-2">Đang tải đánh giá...</p>
+      </div>
+      
+      <!-- Error message -->
+      <div *ngIf="reviewError" class="alert alert-danger">
+        {{ reviewError }}
+      </div>
+      
+      <!-- No reviews message -->
+      <div *ngIf="!isLoadingReviews && (!currentReviews || currentReviews.length === 0)" class="text-center p-4">
+        <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+      </div>
+      
+      <!-- Reviews list -->
+      <div *ngIf="!isLoadingReviews && currentReviews && currentReviews.length > 0" class="reviews-list">
+        <!-- Average rating -->
+        <div class="average-rating mb-4 text-center">
+          <h4>Đánh giá trung bình: {{ calculateAverageRating(currentReviews) }}/5</h4>
+          <div class="stars-container">
+            <div class="stars">
+              <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= calculateAverageRating(currentReviews)">
+                ★
+              </span>
+            </div>
+          </div>
+          <p class="text-muted">Dựa trên {{ currentReviews.length }} đánh giá</p>
+        </div>
+        
+        <!-- Reviews -->
+        <div class="review-item" *ngFor="let review of currentReviews">
+          <div class="review-header">
+            <div class="reviewer-info">
+              <div class="reviewer-avatar">
+                <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="User avatar">
+              </div>
+              <div class="reviewer-details">
+                <h4 class="reviewer-name">{{ review.user_id?.full_name || 'Khách hàng' }}</h4>
+                <div class="review-date">{{ formatReviewDate(review.review_time) }}</div>
+              </div>
+            </div>
+            <div class="review-rating">
+              <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= review.rating">
+                ★
+              </span>
+              <span class="rating-value">{{ review.rating }}/5</span>
+            </div>
+          </div>
+          <div class="review-content">
+            <p>{{ review.comment || 'Không có nhận xét' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   </div>
 </div>
 <app-footer></app-footer>

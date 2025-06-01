@@ -1,4 +1,5 @@
 <app-header></app-header>
+<p-toast position="top-right"></p-toast>
 
 <div class="my-order-page">
   <!-- Breadcrumb -->
@@ -7,7 +8,7 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
-          <li class="breadcrumb-item"><a routerLink="/account">Tài khoản</a></li>
+          <li class="breadcrumb-item"><a routerLink="/profile">Tài khoản</a></li>
           <li class="breadcrumb-item active" aria-current="page">Đơn hàng của bạn</li>
         </ol>
       </nav>
@@ -24,7 +25,7 @@
             <span class="account-icon"><i class="fas fa-user-circle"></i></span>
             <div class="welcome-text">
               <p>TRANG TÀI KHOẢN</p>
-              <p class="welcome-name">Xin chào, <span class="user-name">Xuan Nguyen</span>!</p>
+              <p class="welcome-name">Xin chào, <span class="user-name">{{ user?.full_name || 'Khách hàng' }}</span>!</p>
             </div>
           </div>
           
@@ -33,7 +34,7 @@
               <li><a routerLink="/profile"><i class="fas fa-user"></i> Thông tin tài khoản</a></li>
               <li class="active"><a routerLink="/myorder"><i class="fas fa-shopping-bag"></i> Đơn hàng của bạn</a></li>
               <li><a routerLink="/changepassword"><i class="fas fa-lock"></i> Đổi mật khẩu</a></li>
-               <li><a href="#" class="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+              <li><a href="javascript:void(0)" (click)="logout()" class="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
             </ul>
           </div>
         </div>
@@ -44,123 +45,470 @@
         <div class="my-order-container">
           <h2 class="page-title">Đơn hàng của bạn</h2>
           
-          <!-- Order Filter -->
-          <div class="order-filter">
-            <div class="filter-dropdown">
-              <select class="form-select" (change)="onFilterChange($event)">
-                <option value="all" selected>Tất cả đơn hàng</option>
-                <option value="processing">Đang xử lý</option>
-                <option value="delivered">Đã giao hàng</option>
-                <option value="cancelled">Đã hủy</option>
-              </select>
+          <!-- Loading Indicator -->
+          <div *ngIf="isLoading" class="loading-container">
+            <div class="spinner-border text-warning" role="status">
+              <span class="visually-hidden">Loading...</span>
             </div>
-            
-            <div class="search-order">
-              <input type="text" class="form-control" placeholder="Tìm kiếm đơn hàng..." (input)="onSearch($event)">
-              <button class="search-btn"><i class="fas fa-search"></i></button>
-            </div>
+            <p>Đang tải đơn hàng...</p>
           </div>
           
-          <!-- Orders List -->
-          <div class="orders-list" *ngIf="hasOrders()">
-            <!-- Order Item -->
-            <div class="order-item" *ngFor="let order of filteredOrders">
-              <div class="order-header">
-                <div class="order-date">
-                  <span class="label">Đơn hàng:</span>
-                  <span class="value">#{{ order.id }}</span>
-                  <span class="separator">|</span>
-                  <span class="date">{{ order.date }}</span>
-                </div>
-                <div class="order-status" [ngClass]="order.status">
-                  {{ order.status === 'processing' ? 'Đang xử lý' : 
-                     order.status === 'delivered' ? 'Đã giao hàng' : 'Đã hủy' }}
-                </div>
+          <!-- Content when not loading -->
+          <div *ngIf="!isLoading">
+            <!-- Order Filter -->
+            <div class="order-filter">
+              <div class="filter-dropdown">
+                <select class="form-select" (change)="onFilterChange($event)">
+                  <option value="all" selected>Tất cả đơn hàng</option>
+                  <option value="pending">Đang xử lý</option>
+                  <option value="processing">Đang chuẩn bị</option>
+                  <option value="delivering">Đang giao hàng</option>
+                  <option value="completed">Đã hoàn thành</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
               </div>
               
-              <div class="order-content">
-                <div class="order-products">
-                  <div class="product-item" *ngFor="let product of order.products">
-                    <div class="product-image">
-                      <img [src]="product.image" [alt]="product.name">
+              <div class="search-order">
+                <input type="text" class="form-control" placeholder="Tìm kiếm đơn hàng..." (input)="onSearch($event)">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+              </div>
+            </div>
+            
+            <!-- Orders List -->
+            <div class="orders-list" *ngIf="hasOrders()">
+              <!-- Order Item -->
+              <div class="order-item" *ngFor="let order of filteredOrders">
+                <div class="order-header">
+                  <div class="order-date">
+                    <span class="label">Đơn hàng:</span>
+                    <span class="value">#{{ order.id }}</span>
+                    <span class="separator">|</span>
+                    <span class="date">{{ order.formattedOrderTime }}</span>
+                  </div>
+                  <div class="order-status" [ngClass]="getOrderStatusClass(order.status)">
+                    {{ getOrderStatusTranslation(order.status) }}
+                  </div>
+                </div>
+                
+                <div class="order-content">
+                  <div class="order-products">
+                    <div class="product-item" *ngFor="let detail of order.orderDetails">
+                      <div class="product-image">
+                        <img [src]="detail.pizza?.url || 'assets/images/pizza-sample.jpg'" [alt]="detail.pizza?.name">
+                      </div>
+                      <div class="product-info">
+                        <h3 class="product-name">{{ detail.pizza?.name }}</h3>
+                        <p class="product-variant">{{ detail.size?.size_name || 'N/A' }} / {{ detail.baseType?.base_name || 'N/A' }}</p>
+                        <p class="product-price">{{ formatPrice(detail.price) }} <span class="quantity">x {{ detail.quantity }}</span></p>
+                        <p class="product-note" *ngIf="detail.note">Ghi chú: {{ detail.note }}</p>
+                      </div>
+                      <div class="review-action" *ngIf="order.status.toLowerCase() === 'completed'">
+                        <button class="btn-review" (click)="handleReview(detail.id, detail.pizza?.id, detail.pizza?.name)" 
+                          [ngClass]="{'has-review': hasReview(detail.id)}">
+                          <i class="fas" [ngClass]="hasReview(detail.id) ? 'fa-eye' : 'fa-star'"></i>
+                          {{ hasReview(detail.id) ? 'Xem đánh giá' : 'Đánh giá' }}
+                        </button>
+                      </div>
                     </div>
-                    <div class="product-info">
-                      <h3 class="product-name">{{ product.name }}</h3>
-                      <p class="product-variant">{{ product.variant }}</p>
-                      <p class="product-price">{{ formatPrice(product.price) }} <span class="quantity">x {{ product.quantity }}</span></p>
+                  </div>
+                  
+                  <div class="delivery-info">
+                    <h4 class="info-title">Thông tin nhận hàng</h4>
+                    <ul class="info-list">
+                      <li><span class="label">Người nhận:</span> <span class="value">{{ order.fullName }}</span></li>
+                      <li><span class="label">Điện thoại:</span> <span class="value">{{ order.deliveryPhone }}</span></li>
+                      <li><span class="label">Địa chỉ:</span> <span class="value">{{ order.deliveryAddress }}</span></li>
+                      <li><span class="label">Phương thức giao hàng:</span> <span class="value">{{ order.orderType }}</span></li>
+                      <li><span class="label">Thời gian giao dự kiến:</span> <span class="value">{{ order.formattedShippingTime || 'N/A' }}</span></li>
+                      <li *ngIf="order.note"><span class="label">Ghi chú:</span> <span class="value">{{ order.note }}</span></li>
+                    </ul>
+                  </div>
+                  
+                  <div class="payment-details">
+                    <div class="detail-row">
+                      <span class="label">Tổng tiền hàng:</span>
+                      <span class="value">{{ formatPrice(order.totalPrice) }}</span>
+                    </div>
+                    <div class="detail-row" *ngIf="order.discountAmount > 0">
+                      <span class="label">Khuyến mãi:</span>
+                      <span class="value discount">-{{ formatPrice(order.discountAmount) }}</span>
+                    </div>
+                    <div class="detail-row total">
+                      <span class="label">Số tiền phải trả:</span>
+                      <span class="value">{{ formatPrice(order.totalPrice - order.discountAmount) }}</span>
+                    </div>
+                    <div class="detail-row payment-method">
+                      <span class="label">Thanh toán:</span>
+                      <span class="value method">{{ order.paymentMethod === 'cash' ? 'Tiền mặt khi nhận hàng (COD)' : 
+                                                order.paymentMethod === 'banking' ? 'Chuyển khoản ngân hàng' : 
+                                                order.paymentMethod }}</span>
                     </div>
                   </div>
-                </div>
-                
-                <div class="delivery-info">
-                  <h4 class="info-title">Thông tin nhận hàng</h4>
-                  <ul class="info-list">
-                    <li><span class="label">Người nhận:</span> <span class="value">{{ order.deliveryInfo?.recipientName || 'Xuan Nguyen' }}</span></li>
-                    <li><span class="label">Điện thoại:</span> <span class="value">{{ order.deliveryInfo?.phone || '0987654321' }}</span></li>
-                    <li><span class="label">Địa chỉ:</span> <span class="value">{{ order.deliveryInfo?.address || '123 Nguyễn Huệ, Quận 1, TP.HCM' }}</span></li>
-                    <li><span class="label">Phương thức giao hàng:</span> <span class="value">{{ order.deliveryInfo?.method || 'Giao hàng tận nhà' }}</span></li>
-                    <li><span class="label">Thời gian giao dự kiến:</span> <span class="value">{{ order.deliveryInfo?.expectedTime || '15:00 - 17:00, 16/05/2024' }}</span></li>
-                  </ul>
-                </div>
-                
-                <div class="payment-details">
-                  <div class="detail-row">
-                    <span class="label">Tổng tiền hàng:</span>
-                    <span class="value">{{ formatPrice(order.subtotal || order.totalAmount) }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Phí vận chuyển:</span>
-                    <span class="value">{{ formatPrice(order.shippingFee || 30000) }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Khuyến mãi:</span>
-                    <span class="value discount">-{{ formatPrice(order.discount || 0) }}</span>
-                  </div>
-                  <div class="detail-row total">
-                    <span class="label">Số tiền phải trả:</span>
-                    <span class="value">{{ formatPrice(order.totalAmount) }}</span>
-                  </div>
-                  <div class="detail-row payment-method">
-                    <span class="label">Thanh toán:</span>
-                    <span class="value method">{{ order.paymentMethod || 'Thanh toán khi nhận hàng (COD)' }}</span>
-                  </div>
-                </div>
-                
-                <div class="order-summary">
-                  <div class="action-buttons">
-                    <a href="#" class="btn-view-detail" (click)="$event.preventDefault(); viewOrderDetail(order.id)">Xem chi tiết</a>
-                    <a href="#" class="btn-reorder" (click)="$event.preventDefault(); reorder(order.id)">Đặt lại</a>
+                  
+                  <div class="order-summary">
+                    <div class="action-buttons">
+                      <a href="javascript:void(0)" class="btn-reorder" (click)="reorder(order)">Đặt lại</a>
+                      <a href="javascript:void(0)" class="btn-cancel-order" *ngIf="order.status.toLowerCase() === 'pending'" (click)="cancelOrder(order.id)">Hủy</a>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Empty Orders -->
-          <div class="empty-orders" *ngIf="!hasOrders()">
-            <div class="empty-image">
-              <img src="assets/images/empty-order.svg" alt="No Orders">
+            
+            <!-- Empty Orders -->
+            <div class="empty-orders" *ngIf="!hasOrders()">
+              <div class="empty-image">
+                <i class="fas fa-shopping-bag fa-5x text-muted"></i>
+              </div>
+              <p class="empty-message">Bạn chưa có đơn hàng nào</p>
+              <a routerLink="/pizzas" class="btn-shop-now">Mua sắm ngay</a>
             </div>
-            <p class="empty-message">Bạn chưa có đơn hàng nào</p>
-            <a href="/products" class="btn-shop-now">Mua sắm ngay</a>
-          </div>
-          
-          <!-- Pagination -->
-          <div class="pagination-container" *ngIf="filteredOrders.length > 0">
-            <ul class="pagination">
-              <li class="page-item disabled">
-                <a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a>
-              </li>
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item">
-                <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 0;
+  text-align: center;
+}
+
+.loading-container .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  color: #ff914d;
+}
+
+.product-note {
+  font-style: italic;
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.empty-orders {
+  text-align: center;
+  padding: 50px 0;
+}
+
+.empty-orders .fas {
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-orders .empty-message {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.empty-orders .btn-shop-now {
+  display: inline-block;
+  background-color: #ff914d;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.empty-orders .btn-shop-now:hover {
+  background-color: #e67e34;
+}
+
+.product-item {
+  display: flex;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-info {
+  flex-grow: 1;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.product-variant {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.product-price {
+  font-weight: 600;
+  color: #ff914d;
+}
+
+.product-price .quantity {
+  color: #666;
+  font-weight: normal;
+}
+
+.review-action {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.btn-review {
+  background-color: #ff914d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+}
+
+.btn-review i {
+  margin-right: 5px;
+}
+
+.btn-review:hover {
+  background-color: #e67e34;
+}
+
+.btn-review.has-review {
+  background-color: #4CAF50;
+}
+
+.btn-review.has-review:hover {
+  background-color: #3e8e41;
+}
+
+/* Review Popup Styles */
+.review-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-popup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.review-popup-content {
+  position: relative;
+  background-color: #fff;
+  width: 450px;
+  max-width: 90%;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+}
+
+.review-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #ff914d;
+}
+
+.review-popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: white;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
+}
+
+.review-popup-body {
+  padding: 20px;
+}
+
+.product-info {
+  margin-bottom: 15px;
+}
+
+.product-info .product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.rating-container {
+  margin-bottom: 20px;
+}
+
+.rating-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.star-rating {
+  display: flex;
+}
+
+.star {
+  font-size: 24px;
+  color: #ddd;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.star.active {
+  color: #FFD700;
+}
+
+.star i {
+  pointer-events: none;
+}
+
+.comment-container {
+  margin-bottom: 20px;
+}
+
+.comment-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.comment-container textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: none;
+  font-family: inherit;
+}
+
+.review-popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-cancel, .btn-submit, .btn-edit {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.btn-cancel {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.btn-edit {
+  background-color: #ff914d;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #3a5d97;
+}
+
+.btn-submit {
+  background-color: #ff914d;
+  color: white;
+}
+
+.btn-submit:hover {
+  background-color: #e67e34;
+}
+</style>
+
+<!-- Review Popup -->
+<div class="review-popup" *ngIf="reviewPopup.isVisible">
+  <div class="review-popup-overlay" (click)="closeReviewPopup()"></div>
+  <div class="review-popup-content">
+    <div class="review-popup-header">
+      <h3>
+        {{ reviewPopup.isEdit && reviewPopup.isEditExisting ? 'Sửa đánh giá' : 
+           reviewPopup.isEdit ? 'Đánh giá sản phẩm' : 'Xem đánh giá' }}
+      </h3>
+      <button class="close-btn" (click)="closeReviewPopup()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="review-popup-body">
+      <div class="product-info">
+        <p class="product-name">{{ reviewPopup.pizzaName }}</p>
+      </div>
+      
+      <div class="rating-container">
+        <p class="rating-label">Đánh giá của bạn:</p>
+        <div class="star-rating">
+          <span *ngFor="let star of [1, 2, 3, 4, 5]" 
+                class="star" 
+                [ngClass]="{'active': star <= reviewPopup.rating}"
+                (click)="reviewPopup.isEdit && setRating(star)">
+            <i class="fas fa-star"></i>
+          </span>
+        </div>
+      </div>
+      
+      <div class="comment-container">
+        <label for="review-comment">Nhận xét:</label>
+        <textarea id="review-comment" 
+                  [(ngModel)]="reviewPopup.comment" 
+                  [readonly]="!reviewPopup.isEdit"
+                  placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
+      </div>
+    </div>
+    <div class="review-popup-footer">
+      <button class="btn-cancel" (click)="closeReviewPopup()">Đóng</button>
+      <button *ngIf="!reviewPopup.isEdit && reviewPopup.currentReview" class="btn-edit" (click)="editReview()">Sửa đánh giá</button>
+      <button *ngIf="reviewPopup.isEdit" class="btn-submit" (click)="submitReview()">
+        {{ reviewPopup.isEditExisting ? 'Cập nhật' : 'Gửi đánh giá' }}
+      </button>
     </div>
   </div>
 </div>

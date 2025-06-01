@@ -9,6 +9,6 @@ export interface UserResponse {
     date_of_birth: Date;
     email: string;
     phone: string;
-    role: Role;
+    role_id: Role;
     membership: Membership;
 }
