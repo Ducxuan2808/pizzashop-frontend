@@ -1,0 +1,321 @@
+<!-- App Header -->
+<app-admin-header></app-admin-header>
+
+<!-- Toast component for notifications -->
+<p-toast position="top-right"></p-toast>
+
+<!-- Admin Layout Wrapper -->
+<div class="admin-dashboard-container">
+  <!-- Sidebar Menu từ Dashboard -->
+  <app-dashboard></app-dashboard>
+
+  <!-- Main Content Area -->
+  <div class="admin-main">
+    <!-- Membership Management Content -->
+    <div class="admin-membership-container">
+      <div class="page-header">
+        <h3 class="page-title">Quản lý Thành viên</h3>
+        <div class="header-actions">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Tìm kiếm thành viên..." [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+            <button class="search-button" (click)="onSearch()">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+          <button class="add-button" (click)="openAddModal()">
+            <i class="fa fa-plus"></i>
+            Thêm thành viên
+          </button>
+        </div>
+      </div>
+      
+      <!-- Level Filters -->
+      <div class="filters">
+        <div class="filter-row">
+          <div class="level-filter-buttons">
+            <button class="level-filter-btn" [ngClass]="{'active': levelFilter === 'all'}" (click)="setLevelFilter('all')">
+              <i class="fa fa-users"></i> Tất cả
+            </button>
+            <button class="level-filter-btn" [ngClass]="{'active': levelFilter === 'bronze'}" (click)="setLevelFilter('bronze')">
+              <i class="fa fa-circle bronze-icon"></i> Bronze
+            </button>
+            <button class="level-filter-btn" [ngClass]="{'active': levelFilter === 'silver'}" (click)="setLevelFilter('silver')">
+              <i class="fa fa-circle silver-icon"></i> Silver
+            </button>
+            <button class="level-filter-btn" [ngClass]="{'active': levelFilter === 'gold'}" (click)="setLevelFilter('gold')">
+              <i class="fa fa-circle gold-icon"></i> Gold
+            </button>
+            <button class="level-filter-btn" [ngClass]="{'active': levelFilter === 'platinum'}" (click)="setLevelFilter('platinum')">
+              <i class="fa fa-circle platinum-icon"></i> Platinum
+            </button>
+          </div>
+          <button class="reset-filter-btn" (click)="resetFilters()">
+            <i class="fa fa-refresh"></i> Đặt lại bộ lọc
+          </button>
+        </div>
+      </div>
+     
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="hoverable-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th class="sortable-header" (click)="sort('id')">
+                ID
+                <i class="fa" [ngClass]="getSortIcon('id')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('phone')">
+                Số điện thoại
+                <i class="fa" [ngClass]="getSortIcon('phone')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('total_spent')">
+                Tổng chi tiêu
+                <i class="fa" [ngClass]="getSortIcon('total_spent')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('membership_tier')">
+                Hạng thành viên
+                <i class="fa" [ngClass]="getSortIcon('membership_tier')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('discount_rate')">
+                Tỉ lệ giảm giá
+                <i class="fa" [ngClass]="getSortIcon('discount_rate')"></i>
+              </th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="7" class="text-center">
+                <div class="py-3">
+                  <i class="fa fa-spinner fa-spin" style="font-size: 1.5rem"></i>
+                  <div class="mt-2">Đang tải dữ liệu...</div>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!isLoading && filteredMemberships.length === 0">
+              <td colspan="7" class="text-center py-3">
+                Không có dữ liệu thành viên
+              </td>
+            </tr>
+            <tr *ngFor="let membership of getCurrentPageItems(); let i = index">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>{{ membership.id }}</td>
+              <td>{{ membership.phone }}</td>
+              <td>{{ formatPrice(membership.total_spent) }}</td>
+              <td>
+                <span class="membership-badge" [ngClass]="membership.membership_tier.toLowerCase()">
+                  {{ membership.membership_tier }}
+                </span>
+              </td>
+              <td>{{ membership.discount_rate }}%</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="edit-btn" (click)="openEditModal(membership)" title="Sửa"><i class="fa fa-pencil"></i></button>
+                  <button class="delete-btn" (click)="confirmDeleteMembership(membership.id, $event)" title="Xóa"><i class="fa fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4 pb-4">
+        <div>
+          <span class="text-sm text-gray-700">
+            Hiển thị <span class="font-medium">{{ getStartItem() }}</span> đến <span class="font-medium">{{ getEndItem() }}</span> của <span class="font-medium">{{ totalItems }}</span> mục
+          </span>
+        </div>
+        <div class="flex space-x-1">
+          <button (click)="changePage(1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-left"></i>
+          </button>
+          <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-left"></i>
+          </button>
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <button (click)="changePage(page)" 
+                    class="px-3 py-1 rounded border" 
+                    [ngClass]="currentPage === page ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-50'">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-right"></i>
+          </button>
+          <button (click)="changePage(totalPages)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Membership Modal -->
+<div id="editMembershipModal" class="membership-modal-overlay">
+  <div class="membership-modal-content" *ngIf="selectedMembership">
+    <div class="membership-modal-header">
+      <h3>Cập nhật thông tin thành viên</h3>
+      <button class="membership-modal-close" onclick="document.getElementById('editMembershipModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="membership-modal-body">
+      <div class="membership-modal-info">
+        <div class="form-group">
+          <label for="edit-membership-phone">Số điện thoại</label>
+          <input type="text" id="edit-membership-phone" [(ngModel)]="selectedMembership.phone" [readonly]="true" class="readonly-input">
+          <small class="text-muted">Số điện thoại không thể thay đổi</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-membership-spending">Tổng chi tiêu (VND)</label>
+          <input type="number" id="edit-membership-spending" [(ngModel)]="selectedMembership.total_spent" [readonly]="true" class="readonly-input">
+          <small class="text-muted">Tổng chi tiêu chỉ có thể xem, không thể chỉnh sửa</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-membership-level">Hạng thành viên</label>
+          <select id="edit-membership-level" [(ngModel)]="selectedMembership.membership_tier" (ngModelChange)="onEditMembershipTierChange()">
+            <option value="Bronze">Bronze (0%)</option>
+            <option value="Silver">Silver (2%)</option>
+            <option value="Gold">Gold (3%)</option>
+            <option value="Platinum">Platinum (5%)</option>
+          </select>
+          <div *ngIf="levelError" class="error-message">{{ levelError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-membership-discount">Tỉ lệ giảm giá (%)</label>
+          <input type="number" id="edit-membership-discount" [(ngModel)]="selectedMembership.discount_rate" [readonly]="true" class="readonly-input">
+          <small class="text-muted">Tỉ lệ giảm giá tự động theo hạng thành viên</small>
+        </div>
+      </div>
+    </div>
+    <div class="membership-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('editMembershipModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="updateMembership()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Membership Modal -->
+<div id="addMembershipModal" class="membership-modal-overlay">
+  <div class="membership-modal-content">
+    <div class="membership-modal-header">
+      <h3>Thêm thành viên mới</h3>
+      <button class="membership-modal-close" onclick="document.getElementById('addMembershipModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="membership-modal-body">
+      <div class="membership-modal-info">
+        <!-- Phone search section -->
+        <div class="form-group">
+          <label for="search-phone">Tìm kiếm số điện thoại</label>
+          <div class="phone-search-container">
+            <input 
+              type="text" 
+              id="search-phone" 
+              placeholder="Nhập số điện thoại" 
+              [(ngModel)]="searchPhone"
+              (keyup.enter)="searchMemberByPhone()"
+            >
+            <button class="search-phone-btn" (click)="searchMemberByPhone()">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+          <div *ngIf="isSearching" class="mt-2 text-center">
+            <i class="fa fa-spinner fa-spin"></i> Đang tìm kiếm...
+          </div>
+          <div *ngIf="searchPhoneError" class="error-message">{{ searchPhoneError }}</div>
+        </div>
+
+        <!-- Only show this section if phone doesn't exist -->
+        <div *ngIf="showAddMemberForm">
+          <div class="search-result-message success-message">
+            <i class="fa fa-info-circle"></i> Số điện thoại chưa tồn tại. Bạn có thể thêm thành viên mới.
+          </div>
+          
+          <!-- Two-column layout for add form -->
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="add-membership-phone">Số điện thoại <span class="required">*</span></label>
+                <input type="text" id="add-membership-phone" [(ngModel)]="newMembership.phone" [disabled]="true">
+                <div *ngIf="phoneError" class="error-message">{{ phoneError }}</div>
+              </div>
+            </div>
+            
+            <div class="form-col">
+              <div class="form-group">
+                <label for="add-membership-level">Hạng thành viên <span class="required">*</span></label>
+                <select id="add-membership-level" [(ngModel)]="newMembership.membership_tier" (ngModelChange)="onNewMembershipTierChange()">
+                  <option value="Bronze">Bronze (0%)</option>
+                  <option value="Silver">Silver (2%)</option>
+                  <option value="Gold">Gold (3%)</option>
+                  <option value="Platinum">Platinum (5%)</option>
+                </select>
+                <div *ngIf="levelError" class="error-message">{{ levelError }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="add-membership-discount">Tỉ lệ giảm giá (%)</label>
+                <input type="number" id="add-membership-discount" [(ngModel)]="newMembership.discount_rate" [readonly]="true" class="readonly-input">
+                <small class="text-muted">Tỉ lệ giảm giá tự động theo hạng thành viên</small>
+              </div>
+            </div>
+            
+            <div class="form-col">
+              <!-- Placeholder for balance -->
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button class="btn-save" (click)="addNewMembership()" [disabled]="isSubmitting">
+              <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+              {{ isSubmitting ? 'Đang thêm...' : 'Thêm thành viên' }}
+            </button>
+          </div>
+        </div>
+        
+        <!-- Show this message if phone already exists -->
+        <div *ngIf="phoneExists" class="search-result-message error-message">
+          <i class="fa fa-exclamation-circle"></i> Số điện thoại đã tồn tại trong hệ thống.
+        </div>
+      </div>
+    </div>
+    <div class="membership-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('addMembershipModal').classList.remove('show')" [disabled]="isSubmitting">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Membership Confirmation Modal -->
+<div id="confirmDeleteModal" class="membership-modal-overlay">
+  <div class="membership-modal-content">
+    <div class="membership-modal-header">
+      <h3>Xác nhận xóa</h3>
+      <button class="membership-modal-close" (click)="cancelDelete()">&times;</button>
+    </div>
+    <div class="membership-modal-body">
+      <p>Bạn có chắc chắn muốn xóa thành viên này không?</p>
+    </div>
+    <div class="membership-modal-footer">
+      <button class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting">Hủy</button>
+      <button class="btn-save btn-danger" (click)="proceedDelete()" [disabled]="isDeleting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isDeleting"></i>
+        {{ isDeleting ? 'Đang xóa...' : 'Xóa' }}
+      </button>
+    </div>
+  </div>
+</div>

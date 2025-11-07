@@ -1,0 +1,192 @@
+<app-header></app-header>
+
+<div class="breadcrumb-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ pageTitle }}</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="news-page">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h1 class="page-title">{{ pageTitle }}</h1>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Main Content -->
+      <div class="col-lg-8">
+        <!-- Search Bar -->
+        <div class="news-search mb-4">
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Tìm kiếm tin tức..." 
+              [(ngModel)]="searchTerm"
+              (keyup.enter)="onSearch()"
+            >
+            <div class="input-group-append">
+              <button 
+                class="btn btn-primary" 
+                type="button"
+                (click)="onSearch()"
+              >
+                <i class="fa fa-search"></i>
+              </button>
+            </div>
+            <div class="input-group-append" *ngIf="searchTerm">
+              <button 
+                class="btn btn-outline-secondary" 
+                type="button"
+                (click)="clearSearch()"
+              >
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- News List -->
+        <div class="news-list" *ngIf="displayedNews.length > 0">
+          <div class="row">
+            <div class="col-lg-6 col-md-12 mb-4" *ngFor="let news of displayedNews">
+              <div class="news-card">
+                <div class="news-image">
+                  <a [routerLink]="['/tin-tuc', news.slug]">
+                    <img [src]="news.image" [alt]="news.title" class="img-fluid">
+                  </a>
+                </div>
+                <div class="news-content">
+                  <div class="news-date">
+                    <i class="fa fa-calendar-alt"></i> {{ formatDate(news.publishDate) }}
+                  </div>
+                  <h3 class="news-title">
+                    <a [routerLink]="['/tin-tuc', news.slug]">{{ news.title }}</a>
+                  </h3>
+                  <p class="news-summary">{{ news.summary }}</p>
+                  <a [routerLink]="['/tin-tuc', news.slug]" class="read-more-btn">Xem thêm</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="displayedNews.length === 0">
+          <div class="text-center py-5">
+            <i class="fa fa-newspaper empty-icon"></i>
+            <h3>Không tìm thấy tin tức</h3>
+            <p>Không có tin tức phù hợp với tiêu chí tìm kiếm của bạn.</p>
+            <button class="btn btn-primary" (click)="clearSearch()">Xem tất cả tin tức</button>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="totalPages > 1">
+          <ul class="pagination">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" href="javascript:void(0)" (click)="goToPage(currentPage - 1)">
+                <i class="fa fa-chevron-left"></i>
+              </a>
+            </li>
+            
+            <li class="page-item" *ngIf="getPageNumbers()[0] > 1">
+              <a class="page-link" href="javascript:void(0)" (click)="goToPage(1)">1</a>
+            </li>
+            
+            <li class="page-item disabled" *ngIf="getPageNumbers()[0] > 1">
+              <span class="page-link">...</span>
+            </li>
+            
+            <li class="page-item" *ngFor="let page of getPageNumbers()"
+                [class.active]="currentPage === page">
+              <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">
+                {{ page }}
+              </a>
+            </li>
+            
+            <li class="page-item disabled" *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages">
+              <span class="page-link">...</span>
+            </li>
+            
+            <li class="page-item" *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages">
+              <a class="page-link" href="javascript:void(0)" (click)="goToPage(totalPages)">{{ totalPages }}</a>
+            </li>
+            
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" href="javascript:void(0)" (click)="goToPage(currentPage + 1)">
+                <i class="fa fa-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <!-- Categories Widget -->
+        <div class="sidebar-widget categories-widget">
+          <h3 class="widget-title">Danh mục tin tức</h3>
+          <ul class="categories-list">
+            <li>
+              <a 
+                href="javascript:void(0)" 
+                class="category-link"
+                [class.active]="selectedCategoryId === null"
+                (click)="selectCategory(null)"
+              >
+                Tất cả tin tức
+              </a>
+            </li>
+            <li *ngFor="let category of categories">
+              <a 
+                href="javascript:void(0)" 
+                class="category-link"
+                [class.active]="selectedCategoryId === category.id"
+                (click)="selectCategory(category.id)"
+              >
+                {{ category.name }} 
+                <span class="count">({{ category.count }})</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Featured News Widget -->
+        <div class="sidebar-widget featured-news-widget">
+          <h3 class="widget-title">Tin tức nổi bật</h3>
+          <div class="featured-news-list">
+            <div class="featured-news-item" *ngFor="let news of featuredNews">
+              <div class="featured-news-image">
+                <a [routerLink]="['/tin-tuc', news.slug]">
+                  <img [src]="news.image" [alt]="news.title" class="img-fluid">
+                </a>
+              </div>
+              <div class="featured-news-content">
+                <div class="news-date">
+                  <i class="fa fa-calendar-alt"></i> {{ formatDate(news.publishDate) }}
+                </div>
+                <h4 class="featured-news-title">
+                  <a [routerLink]="['/tin-tuc', news.slug]">{{ news.title }}</a>
+                </h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

@@ -1,0 +1,107 @@
+<!-- Header -->
+<app-header></app-header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-container">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a routerLink="/">Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Câu hỏi thường gặp</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<!-- FAQ Page -->
+<div class="faq-page">
+  <div class="container">
+    <div class="faq-header">
+      <h1 class="faq-title">Câu hỏi thường gặp</h1>
+      <p class="faq-subtitle">Những câu hỏi phổ biến về PizZing pizza</p>
+    </div>
+    
+    <!-- Search Box -->
+    <div class="faq-search">
+      <div class="search-container">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          placeholder="Tìm kiếm câu hỏi..." 
+          class="search-input"
+        >
+        <button class="search-button" (click)="onSearch()">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="faq-content">
+      <!-- Categories Sidebar -->
+      <div class="faq-sidebar">
+        <h3 class="sidebar-title">Danh mục</h3>
+        <ul class="category-list">
+          <li>
+            <a 
+              [class.active]="selectedCategoryId === null" 
+              (click)="selectCategory(null)"
+            >
+              Tất cả
+            </a>
+          </li>
+          <li *ngFor="let category of categories">
+            <a 
+              [class.active]="selectedCategoryId === category.id" 
+              (click)="selectCategory(category.id)"
+            >
+              {{ category.name }}
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- FAQ Main Content -->
+      <div class="faq-main">
+        <!-- If no results found -->
+        <div class="empty-results" *ngIf="filteredFaqs.length === 0">
+          <div class="empty-icon">
+            <i class="far fa-question-circle"></i>
+          </div>
+          <h3>Không tìm thấy kết quả</h3>
+          <p>Không tìm thấy câu hỏi phù hợp với tìm kiếm của bạn.</p>
+          <button class="btn-clear" (click)="clearSearch()">Xóa tìm kiếm</button>
+        </div>
+        
+        <!-- FAQ items grouped by category -->
+        <div class="faq-groups" *ngIf="filteredFaqs.length > 0">
+          <div class="faq-group" *ngFor="let group of getGroupedFaqs()">
+            <h3 class="group-title">{{ group.categoryName }}</h3>
+            <div class="faq-list">
+              <div class="faq-item" *ngFor="let faq of group.faqs">
+                <div 
+                  class="faq-question" 
+                  [class.active]="faq.expanded" 
+                  (click)="toggleFaq(faq.id)"
+                >
+                  <span>{{ faq.question }}</span>
+                  <i class="fas" [ngClass]="faq.expanded ? 'fa-minus' : 'fa-plus'"></i>
+                </div>
+                <div class="faq-answer" [class.active]="faq.expanded">
+                  <p>{{ faq.answer }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-contact">
+      <h3>Vẫn chưa tìm thấy câu trả lời?</h3>
+      <p>Liên hệ với chúng tôi để được hỗ trợ trực tiếp.</p>
+      <button [routerLink]="['/lien-he']" class="contact-button">Liên hệ ngay</button>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

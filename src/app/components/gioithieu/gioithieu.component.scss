@@ -1,0 +1,356 @@
+// Breadcrumb Styles
+.breadcrumb-container {
+    margin-bottom: 30px;
+    background-color: #f8f9fa;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+  
+    .breadcrumb {
+      margin-bottom: 0;
+      padding: 0;
+      background-color: transparent;
+  
+      .breadcrumb-item {
+        font-size: 14px;
+        color: #6c757d;
+        
+        + .breadcrumb-item::before {
+          content: "/";
+          color: #adb5bd;
+        }
+  
+        &.active {
+          color: #ff6b00;
+          font-weight: 500;
+        }
+  
+        a {
+          color: #6c757d;
+          text-decoration: none;
+          transition: color 0.2s;
+  
+          &:hover {
+            color: #ff6b00;
+            text-decoration: none;
+          }
+        }
+      }
+    }
+  }
+
+// About Us Page Styles
+.about-us-page {
+  padding-bottom: 60px;
+
+  .page-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 40px;
+    position: relative;
+    padding-bottom: 15px;
+    
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background-color: #dc3545;
+    }
+  }
+
+  section {
+    margin-bottom: 60px;
+  }
+}
+
+// About Section Styles
+.about-section {
+  .about-content {
+    padding-right: 30px;
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .about-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #555;
+      margin-bottom: 25px;
+    }
+
+    .features-list {
+      list-style: none;
+      padding-left: 0;
+
+      li {
+        padding: 8px 0;
+        font-size: 16px;
+        color: #555;
+
+        i {
+          color: #dc3545;
+          margin-right: 10px;
+        }
+      }
+    }
+  }
+
+  .about-image {
+    overflow: hidden;
+    border-radius: 10px;
+    
+    img {
+      transition: transform 0.5s;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+// Why Choose Us Section Styles
+.why-choose-section {
+  padding: 50px 0;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    color: #666;
+    max-width: 800px;
+    margin: 0 auto 30px;
+  }
+
+  .feature-card {
+    padding: 30px 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
+    
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background-color: #ffeaea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      i {
+        font-size: 30px;
+        color: #dc3545;
+      }
+    }
+
+    .feature-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .feature-desc {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.6;
+    }
+  }
+}
+
+// Chefs Section Styles
+.chefs-section {
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+  }
+
+  .chef-card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .chef-image {
+      position: relative;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        transition: transform 0.5s;
+      }
+      
+      &:hover img {
+        transform: scale(1.1);
+      }
+    }
+
+    .chef-info {
+      padding: 20px;
+      background-color: #fff;
+
+      .chef-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .chef-position {
+        font-size: 16px;
+        color: #dc3545;
+        font-weight: 500;
+        margin-bottom: 10px;
+      }
+
+      .chef-desc {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 15px;
+      }
+
+      .chef-social {
+        .social-link {
+          display: inline-flex;
+          width: 36px;
+          height: 36px;
+          background-color: #f8f9fa;
+          border-radius: 50%;
+          align-items: center;
+          justify-content: center;
+          color: #666;
+          margin: 0 5px;
+          transition: all 0.3s;
+          
+          &:hover {
+            background-color: #dc3545;
+            color: #fff;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Company Info Section Styles
+.company-info-section {
+  .info-card {
+    padding: 30px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    height: 100%;
+    
+    .info-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+      position: relative;
+      padding-bottom: 10px;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 40px;
+        height: 2px;
+        background-color: #dc3545;
+      }
+    }
+
+    .info-text {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.7;
+    }
+
+    .payment-methods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      
+      .payment-icon {
+        height: 40px;
+        object-fit: contain;
+      }
+    }
+  }
+}
+
+// Responsive Styles
+@media (max-width: 991.98px) {
+  .about-section {
+    .about-content {
+      padding-right: 0;
+      margin-bottom: 30px;
+    }
+  }
+}
+
+@media (max-width: 767.98px) {
+  .about-us-page {
+    .page-title {
+      font-size: 28px;
+    }
+  }
+  
+  .about-section, 
+  .why-choose-section, 
+  .chefs-section {
+    .section-title {
+      font-size: 24px;
+    }
+  }
+  
+  .feature-card {
+    margin-bottom: 20px;
+  }
+  
+  .chef-card {
+    margin-bottom: 20px;
+  }
+  
+  .company-info-section {
+    .info-card {
+      margin-bottom: 20px;
+    }
+  }
+}

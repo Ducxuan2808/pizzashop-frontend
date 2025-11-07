@@ -1,0 +1,203 @@
+<!-- App Header -->
+<app-admin-header></app-admin-header>
+
+<!-- Toast component for notifications -->
+<p-toast position="top-right"></p-toast>
+
+<!-- Admin Layout Wrapper -->
+<div class="admin-dashboard-container">
+  <!-- Sidebar Menu từ Dashboard -->
+  <app-dashboard></app-dashboard>
+
+  <!-- Main Content Area -->
+  <div class="admin-main">
+    <!-- Size Management Content -->
+    <div class="admin-size-container">
+      <div class="page-header">
+        <h3 class="page-title">Quản lý Kích thước</h3>
+        <div class="header-actions">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Tìm kiếm kích thước..." [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+            <button class="search-button" (click)="onSearch()">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+          <button class="add-button" (click)="openAddModal()">
+            <i class="fa fa-plus"></i>
+            Thêm kích thước
+          </button>
+        </div>
+      </div>
+      
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="hoverable-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th class="sortable-header" (click)="sort('id')">
+                ID
+                <i class="fa" [ngClass]="getSortIcon('id')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('size_name')">
+                Kích thước
+                <i class="fa" [ngClass]="getSortIcon('size_name')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('price_multiplier')">
+                Hệ số giá (%)
+                <i class="fa" [ngClass]="getSortIcon('price_multiplier')"></i>
+              </th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="5" class="text-center">
+                <div class="py-3">
+                  <i class="fa fa-spinner fa-spin" style="font-size: 1.5rem"></i>
+                  <div class="mt-2">Đang tải dữ liệu...</div>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!isLoading && filteredSizes.length === 0">
+              <td colspan="5" class="text-center py-3">
+                Không có dữ liệu kích thước
+              </td>
+            </tr>
+            <tr *ngFor="let size of getCurrentPageItems(); let i = index">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>{{ size.id }}</td>
+              <td>{{ size.size_name }}</td>
+              <td>{{ Math.round(size.price_multiplier * 100) }}%</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="edit-btn" (click)="openEditModal(size)"><i class="fa fa-pencil"></i></button>
+                  <button class="delete-btn" (click)="confirmDeleteSize(size.id, $event)"><i class="fa fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4 pb-4">
+        <div>
+          <span class="text-sm text-gray-700">
+            Hiển thị <span class="font-medium">{{ getStartItem() }}</span> đến <span class="font-medium">{{ getEndItem() }}</span> của <span class="font-medium">{{ totalItems }}</span> mục
+          </span>
+        </div>
+        <div class="flex space-x-1">
+          <button (click)="changePage(1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-left"></i>
+          </button>
+          <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-left"></i>
+          </button>
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <button (click)="changePage(page)" 
+                    class="px-3 py-1 rounded border" 
+                    [ngClass]="currentPage === page ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-50'">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-right"></i>
+          </button>
+          <button (click)="changePage(totalPages)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Size Modal -->
+<div id="editSizeModal" class="size-modal-overlay">
+  <div class="size-modal-content" *ngIf="selectedSize">
+    <div class="size-modal-header">
+      <h3>Cập nhật thông tin kích thước</h3>
+      <button class="size-modal-close" onclick="document.getElementById('editSizeModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="size-modal-body">
+      <div class="size-modal-info">
+        <div class="form-group">
+          <label for="edit-size-name">Kích thước</label>
+          <input type="text" id="edit-size-name" [(ngModel)]="selectedSize.size_name">
+          <div *ngIf="sizeNameError" class="error-message">{{ sizeNameError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-price-multiplier">Hệ số giá (%)</label>
+          <input type="number" id="edit-price-multiplier" [(ngModel)]="selectedSize.price_multiplier" (change)="formatPriceMultiplier()">
+          <div *ngIf="priceMultiplierError" class="error-message">{{ priceMultiplierError }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="size-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('editSizeModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="updateSize()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Size Modal -->
+<div id="addSizeModal" class="size-modal-overlay">
+  <div class="size-modal-content">
+    <div class="size-modal-header">
+      <h3>Thêm kích thước mới</h3>
+      <button class="size-modal-close" onclick="document.getElementById('addSizeModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="size-modal-body">
+      <div class="size-modal-info">
+        <div class="form-group">
+          <label for="add-size-name">Kích thước <span class="required">*</span></label>
+          <input type="text" id="add-size-name" placeholder="Nhập kích thước" [(ngModel)]="newSize.size_name">
+          <div *ngIf="newSizeNameError" class="error-message">{{ newSizeNameError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="add-price-multiplier">Hệ số giá (%) <span class="required">*</span></label>
+          <input type="number" id="add-price-multiplier" placeholder="Nhập hệ số giá" [(ngModel)]="newSize.price_multiplier" (change)="formatNewPriceMultiplier()">
+          <div *ngIf="newPriceMultiplierError" class="error-message">{{ newPriceMultiplierError }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="size-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('addSizeModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="addNewSize()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang thêm...' : 'Thêm kích thước' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div id="confirmDeleteModal" class="delete-modal-overlay">
+  <div class="delete-modal-content">
+    <div class="delete-modal-header">
+      <h3>Xác nhận xóa</h3>
+      <button class="delete-modal-close" onclick="document.getElementById('confirmDeleteModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="delete-modal-body">
+      <p>Bạn có chắc chắn muốn xóa kích thước này?</p>
+      <p class="warning">Hành động này không thể hoàn tác!</p>
+    </div>
+    <div class="delete-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('confirmDeleteModal').classList.remove('show')" [disabled]="isDeleting">Hủy</button>
+      <button class="btn-delete" (click)="proceedDelete()" [disabled]="isDeleting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isDeleting"></i>
+        {{ isDeleting ? 'Đang xóa...' : 'Xóa' }}
+      </button>
+    </div>
+  </div>
+</div>

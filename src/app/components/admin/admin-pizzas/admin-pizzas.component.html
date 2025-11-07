@@ -1,0 +1,351 @@
+<!-- App Header -->
+<app-admin-header></app-admin-header>
+
+<!-- Toast component for notifications -->
+<p-toast position="top-right"></p-toast>
+
+<!-- Admin Layout Wrapper -->
+<div class="admin-dashboard-container">
+  <!-- Sidebar Menu từ Dashboard -->
+  <app-dashboard></app-dashboard>
+
+  <!-- Main Content Area -->
+  <div class="admin-main">
+    <!-- Pizza Management Content -->
+    <div class="admin-pizza-container">
+      <div class="page-header">
+        <h3 class="page-title">Quản lý sản phẩm</h3>
+        <div class="header-actions">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Tìm kiếm pizza..." [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+            <button class="search-button" (click)="onSearch()">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+          <button class="add-button" (click)="openAddModal()">
+            <i class="fa fa-plus"></i>
+            Thêm sản phẩm mới
+          </button>
+        </div>
+      </div>
+     
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="hoverable-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th class="sortable-header" (click)="sort('id')">
+                ID
+                <i class="fa" [ngClass]="getSortIcon('id')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('name')">
+                Tên sản phẩm
+                <i class="fa" [ngClass]="getSortIcon('name')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('price')">
+                Giá
+                <i class="fa" [ngClass]="getSortIcon('price')"></i>
+              </th>
+              <th>Ảnh</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="6" class="text-center">
+                <div class="py-3">
+                  <i class="fa fa-spinner fa-spin" style="font-size: 1.5rem"></i>
+                  <div class="mt-2">Đang tải dữ liệu...</div>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!isLoading && filteredPizzas.length === 0">
+              <td colspan="6" class="text-center py-3">
+                Không có dữ liệu pizza
+              </td>
+            </tr>
+            <tr *ngFor="let pizza of getCurrentPageItems(); let i = index">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>{{ pizza.id }}</td>
+              <td>{{ pizza.name }}</td>
+              <td>{{ formatPrice(pizza.base_price) }}</td>
+              <td><img [src]="pizza.url || 'https://via.placeholder.com/60'" alt="Pizza" class="card-img-top"></td>
+              <td>
+                <div class="action-buttons">
+                  <button class="review-btn" (click)="openReviewsModal(pizza)" title="Xem đánh giá"><i class="fa fa-star"></i></button>
+                  <button class="edit-btn" (click)="openEditModal(pizza)" title="Sửa"><i class="fa fa-pencil"></i></button>
+                  <button class="delete-btn" (click)="confirmDeletePizza(pizza.id, $event)" title="Xóa"><i class="fa fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4 pb-4">
+        <div>
+          <span class="text-sm text-gray-700">
+            Hiển thị <span class="font-medium">{{ getStartItem() }}</span> đến <span class="font-medium">{{ getEndItem() }}</span> của <span class="font-medium">{{ totalItems }}</span> mục
+          </span>
+        </div>
+        <div class="flex space-x-1">
+          <button (click)="changePage(1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-left"></i>
+          </button>
+          <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-left"></i>
+          </button>
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <button (click)="changePage(page)" 
+                    class="px-3 py-1 rounded border" 
+                    [ngClass]="currentPage === page ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-50'">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-right"></i>
+          </button>
+          <button (click)="changePage(totalPages)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Pizza Modal -->
+<div id="editPizzaModal" class="pizza-modal-overlay">
+  <div class="pizza-modal-content" *ngIf="selectedPizza">
+    <div class="pizza-modal-header">
+      <h3>Cập nhật Sản phẩm</h3>
+      <button class="pizza-modal-close" onclick="document.getElementById('editPizzaModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="pizza-modal-body">
+      <div class="pizza-image-container">
+        <!-- Hiển thị ảnh preview nếu đã chọn, không thì hiển thị ảnh hiện tại -->
+        <img [src]="previewImageURL || selectedPizza.url || 'https://via.placeholder.com/200'" alt="Pizza Image">
+        
+        <!-- Nút upload ẩn input file thật và kích hoạt click -->
+        <label class="image-upload-btn">
+          <i class="fa fa-camera"></i> Cập nhật ảnh
+          <input 
+            type="file" 
+            accept="image/jpeg,image/jpg,image/png" 
+            style="display:none"  
+            (change)="onFileSelected($event)"
+          >
+        </label>
+        
+        <!-- Hiển thị tên file đã chọn nếu có -->
+        <div *ngIf="selectedFile" class="selected-file-info">
+          <span class="selected-filename">{{ selectedFile.name }}</span>
+          <button class="remove-file-btn" (click)="resetFileInput()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="pizza-modal-info">
+        <div class="form-group">
+          <label for="edit-pizza-name">Tên sản phẩm</label>
+          <input type="text" id="edit-pizza-name" [(ngModel)]="selectedPizza.name">
+          <div *ngIf="nameError" class="error-message">{{ nameError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-pizza-price">Giá (VND)</label>
+          <input type="number" id="edit-pizza-price" [(ngModel)]="selectedPizza.base_price">
+          <div *ngIf="priceError" class="error-message">{{ priceError }}</div>
+        </div>
+      
+        <div class="form-group">
+          <label for="edit-pizza-description">Mô tả</label>
+          <textarea id="edit-pizza-description" [(ngModel)]="selectedPizza.description" rows="4"></textarea>
+          <div *ngIf="descriptionError" class="error-message">{{ descriptionError }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="pizza-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('editPizzaModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="updatePizza()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Pizza Modal -->
+<div id="addPizzaModal" class="pizza-modal-overlay">
+  <div class="pizza-modal-content">
+    <div class="pizza-modal-header">
+      <h3>Thêm sản phẩm mới</h3>
+      <button class="pizza-modal-close" onclick="document.getElementById('addPizzaModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="pizza-modal-body">
+      <div class="pizza-image-container">
+        <img [src]="newPizzaImageURL || 'https://via.placeholder.com/200?text=No+Image'" alt="Pizza Image">
+        <label class="image-upload-btn">
+          <i class="fa fa-upload"></i> Thêm ảnh
+          <input 
+            type="file" 
+            accept="image/jpeg,image/jpg,image/png" 
+            style="display:none" 
+            (change)="onNewPizzaFileSelected($event)"
+          >
+        </label>
+        <!-- Hiển thị tên file đã chọn nếu có -->
+        <div *ngIf="newPizzaFile" class="selected-file-info">
+          <span class="selected-filename">{{ newPizzaFile.name }}</span>
+          <button class="remove-file-btn" (click)="resetNewPizzaFileInput()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="pizza-modal-info">
+        <div class="form-group">
+          <label for="add-pizza-name">Tên sản phẩm <span class="required">*</span></label>
+          <input type="text" id="add-pizza-name" placeholder="Nhập tên pizza" [(ngModel)]="newPizza.name">
+          <div *ngIf="newPizzaNameError" class="error-message">{{ newPizzaNameError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="add-pizza-price">Giá (VND) <span class="required">*</span></label>
+          <input type="number" id="add-pizza-price" placeholder="Nhập giá" [(ngModel)]="newPizza.base_price">
+          <div *ngIf="newPizzaPriceError" class="error-message">{{ newPizzaPriceError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="add-pizza-description">Mô tả <span class="required">*</span></label>
+          <textarea id="add-pizza-description" placeholder="Nhập mô tả chi tiết về pizza" [(ngModel)]="newPizza.description"></textarea>
+          <div *ngIf="newPizzaDescriptionError" class="error-message">{{ newPizzaDescriptionError }}</div>
+        </div>
+        <div *ngIf="newPizzaFileError" class="error-message">{{ newPizzaFileError }}</div>
+      </div>
+    </div>
+    <div class="pizza-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('addPizzaModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="addNewPizza()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang thêm...' : 'Thêm mới' }}
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Thong bao xoa -->
+<!-- Delete Pizza Confirmation Modal -->
+<div id="confirmDeleteModal" class="pizza-modal-overlay">
+  <div class="pizza-modal-content">
+    <div class="pizza-modal-header">
+      <h3>Xác nhận xóa</h3>
+      <button class="pizza-modal-close" (click)="cancelDelete()">&times;</button>
+    </div>
+    <div class="pizza-modal-body">
+      <p>Bạn có chắc chắn muốn xóa pizza này không?</p>
+    </div>
+    <div class="pizza-modal-footer">
+      <button class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting">Hủy</button>
+      <button class="btn-save btn-danger" (click)="proceedDelete()" [disabled]="isDeleting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isDeleting"></i>
+        {{ isDeleting ? 'Đang xóa...' : 'Xóa' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reviews Modal -->
+<div id="viewReviewsModal" class="pizza-modal-overlay">
+  <div class="pizza-modal-content">
+    <div class="pizza-modal-header">
+      <h3>Đánh giá sản phẩm: {{ selectedPizzaForReview?.name }}</h3>
+      <button class="pizza-modal-close" (click)="closeReviewsModal()">&times;</button>
+    </div>
+    <div class="pizza-modal-body">
+      <!-- Loading indicator -->
+      <div *ngIf="isLoadingReviews" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Đang tải...</span>
+        </div>
+        <p class="mt-2">Đang tải đánh giá...</p>
+      </div>
+      
+      <!-- Error message -->
+      <div *ngIf="reviewError" class="alert alert-danger">
+        {{ reviewError }}
+      </div>
+      
+      <!-- No reviews message -->
+      <div *ngIf="!isLoadingReviews && (!currentReviews || currentReviews.length === 0)" class="text-center p-4">
+        <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+      </div>
+      
+      <!-- Reviews list -->
+      <div *ngIf="!isLoadingReviews && currentReviews && currentReviews.length > 0" class="reviews-list">
+        <!-- Average rating -->
+        <div class="average-rating mb-4 text-center">
+          <h4>Đánh giá trung bình: {{ calculateAverageRating(currentReviews) }}/5</h4>
+          <div class="stars-container">
+            <div class="stars">
+              <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= calculateAverageRating(currentReviews)">
+                ★
+              </span>
+            </div>
+          </div>
+          <p class="text-muted">Dựa trên {{ currentReviews.length }} đánh giá</p>
+        </div>
+        
+        <!-- Reviews -->
+        <div class="review-item" *ngFor="let review of currentReviews">
+          <div class="review-header">
+            <div class="reviewer-info">
+              <strong>{{ review.user_id?.full_name || 'Khách hàng' }}</strong>
+              <span class="review-date">{{ formatReviewDate(review.review_time) }}</span>
+            </div>
+            <div class="review-rating">
+              <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= review.rating">
+                ★
+              </span>
+              <span class="rating-text">{{ review.rating }}/5</span>
+            </div>
+          </div>
+          <div class="review-content">
+            <p>{{ review.comment || 'Không có nhận xét' }}</p>
+          </div>
+          <div class="review-actions">
+            <button class="delete-review-btn" (click)="confirmDeleteReview(review.id)">
+              <i class="fa fa-trash"></i> Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pizza-modal-footer">
+      <button class="btn-save" (click)="closeReviewsModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Review Confirmation Modal -->
+<div id="confirmDeleteReviewModal" class="pizza-modal-overlay">
+  <div class="pizza-modal-content">
+    <div class="pizza-modal-header">
+      <h3>Xác nhận xóa đánh giá</h3>
+      <button class="pizza-modal-close" (click)="cancelDeleteReview()">&times;</button>
+    </div>
+    <div class="pizza-modal-body">
+      <p>Bạn có chắc chắn muốn xóa đánh giá này không?</p>
+    </div>
+    <div class="pizza-modal-footer">
+      <button class="btn-cancel" (click)="cancelDeleteReview()" [disabled]="isDeletingReview">Hủy</button>
+      <button class="btn-save btn-danger" (click)="proceedDeleteReview()" [disabled]="isDeletingReview">
+        <i class="fa fa-spinner fa-spin" *ngIf="isDeletingReview"></i>
+        {{ isDeletingReview ? 'Đang xóa...' : 'Xóa' }}
+      </button>
+    </div>
+  </div>
+</div>

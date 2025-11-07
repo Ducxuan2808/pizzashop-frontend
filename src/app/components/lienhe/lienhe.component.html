@@ -1,0 +1,125 @@
+<!-- Header -->
+<app-header></app-header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-wrap">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <ul class="breadcrumb">
+          <li><a href="/">Trang chủ</a></li>
+          <li><span>Liên hệ</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Content -->
+<div class="contact-page">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-6 col-md-12 col-sm-12 mb-4 mb-lg-0">
+        <div class="contact-info">
+          <h1 class="page-title">Liên hệ</h1>
+          <div class="address-block">
+            <h4>PizZing Pizza</h4>
+            <p><i class="fa fa-map-marker"></i> 70 Lữ Gia, Phường 15, Quận 11, Tp. HCM</p>
+            <p><i class="fa fa-phone"></i> <a href="tel:19006750">1900 6750</a></p>
+            <p><i class="fa fa-envelope"></i> <a href="mailto:support&#64;pizzing.vn">support&#64;pizzing.vn</a></p>
+          </div>
+          <div class="business-hours">
+            <h4>Giờ làm việc</h4>
+            <p>Thứ Hai - Chủ Nhật: 8:00 - 22:00</p>
+          </div>
+          <div class="social-links">
+            <h4>Kết nối với chúng tôi</h4>
+            <ul class="social-list">
+              <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+              <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+              <li><a href="#"><i class="fa fa-youtube"></i></a></li>
+              <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 col-md-12 col-sm-12">
+        <div class="contact-form-container">
+          <h3>Liên hệ với chúng tôi</h3>
+          <p>Vui lòng điền vào biểu mẫu bên dưới, chúng tôi sẽ liên hệ lại với bạn sớm nhất có thể.</p>
+          
+          <div *ngIf="submitSuccess" class="alert-success">
+            Cảm ơn bạn đã liên hệ với chúng tôi! Chúng tôi sẽ phản hồi sớm nhất có thể.
+          </div>
+          
+          <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="name">Họ và tên *</label>
+                <input type="text" class="form-control" id="name" formControlName="name" 
+                  [ngClass]="{'is-invalid': contactForm.get('name')?.invalid && (contactForm.get('name')?.dirty || contactForm.get('name')?.touched)}">
+                <div *ngIf="contactForm.get('name')?.invalid && (contactForm.get('name')?.dirty || contactForm.get('name')?.touched)" class="invalid-feedback">
+                  <div *ngIf="contactForm.get('name')?.errors?.['required']">Vui lòng nhập họ tên của bạn.</div>
+                  <div *ngIf="contactForm.get('name')?.errors?.['minlength']">Họ tên phải có ít nhất 3 ký tự.</div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="email">Email *</label>
+                <input type="email" class="form-control" id="email" formControlName="email"
+                  [ngClass]="{'is-invalid': contactForm.get('email')?.invalid && (contactForm.get('email')?.dirty || contactForm.get('email')?.touched)}">
+                <div *ngIf="contactForm.get('email')?.invalid && (contactForm.get('email')?.dirty || contactForm.get('email')?.touched)" class="invalid-feedback">
+                  <div *ngIf="contactForm.get('email')?.errors?.['required']">Vui lòng nhập email của bạn.</div>
+                  <div *ngIf="contactForm.get('email')?.errors?.['email']">Vui lòng nhập một địa chỉ email hợp lệ.</div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="phone">Số điện thoại *</label>
+                <input type="tel" class="form-control" id="phone" formControlName="phone"
+                  [ngClass]="{'is-invalid': contactForm.get('phone')?.invalid && (contactForm.get('phone')?.dirty || contactForm.get('phone')?.touched)}">
+                <div *ngIf="contactForm.get('phone')?.invalid && (contactForm.get('phone')?.dirty || contactForm.get('phone')?.touched)" class="invalid-feedback">
+                  <div *ngIf="contactForm.get('phone')?.errors?.['required']">Vui lòng nhập số điện thoại của bạn.</div>
+                  <div *ngIf="contactForm.get('phone')?.errors?.['pattern']">Số điện thoại phải có 10-11 chữ số.</div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="address">Địa chỉ</label>
+                <input type="text" class="form-control" id="address" formControlName="address">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="message">Lời nhắn *</label>
+              <textarea class="form-control" id="message" rows="5" formControlName="message"
+                [ngClass]="{'is-invalid': contactForm.get('message')?.invalid && (contactForm.get('message')?.dirty || contactForm.get('message')?.touched)}"></textarea>
+              <div *ngIf="contactForm.get('message')?.invalid && (contactForm.get('message')?.dirty || contactForm.get('message')?.touched)" class="invalid-feedback">
+                <div *ngIf="contactForm.get('message')?.errors?.['required']">Vui lòng nhập nội dung tin nhắn.</div>
+                <div *ngIf="contactForm.get('message')?.errors?.['minlength']">Tin nhắn phải có ít nhất 10 ký tự.</div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary">Gửi tin nhắn</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Map Section -->
+<div class="map-section">
+  <div class="container-fluid p-0">
+    <div class="row no-gutters">
+      <div class="col-12">
+        <div class="map-container">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.5177580567313!2d106.6465620107514!3d10.770230989387624!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752ec3c161a3fb%3A0xef77cd47a1cc691e!2zNzAgTOG7uyBHaWEsIFBoxrDhu51uZyAxNSwgUXXhuq1uIDExLCBUaMOgbmggcGjhu5EgSOG7kyBDaMOtIE1pbmgsIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1651136430645!5m2!1svi!2s" 
+            width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<app-footer></app-footer>

@@ -1,0 +1,203 @@
+<!-- App Header -->
+<app-admin-header></app-admin-header>
+
+<!-- Toast component for notifications -->
+<p-toast position="top-right"></p-toast>
+
+<!-- Admin Layout Wrapper -->
+<div class="admin-dashboard-container">
+  <!-- Sidebar Menu từ Dashboard -->
+  <app-dashboard></app-dashboard>
+
+  <!-- Main Content Area -->
+  <div class="admin-main">
+    <!-- Type Management Content -->
+    <div class="admin-type-container">
+      <div class="page-header">
+        <h3 class="page-title">Quản lý Phân loại</h3>
+        <div class="header-actions">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Tìm kiếm phân loại..." [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+            <button class="search-button" (click)="onSearch()">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+          <button class="add-button" (click)="openAddModal()">
+            <i class="fa fa-plus"></i>
+            Thêm phân loại
+          </button>
+        </div>
+      </div>
+      
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="hoverable-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th class="sortable-header" (click)="sort('id')">
+                ID
+                <i class="fa" [ngClass]="getSortIcon('id')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('base_name')">
+                Tên loại
+                <i class="fa" [ngClass]="getSortIcon('base_name')"></i>
+              </th>
+              <th class="sortable-header" (click)="sort('price')">
+                Giá thêm
+                <i class="fa" [ngClass]="getSortIcon('price')"></i>
+              </th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="5" class="text-center">
+                <div class="py-3">
+                  <i class="fa fa-spinner fa-spin" style="font-size: 1.5rem"></i>
+                  <div class="mt-2">Đang tải dữ liệu...</div>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!isLoading && filteredTypes.length === 0">
+              <td colspan="5" class="text-center py-3">
+                Không có dữ liệu phân loại
+              </td>
+            </tr>
+            <tr *ngFor="let type of getCurrentPageItems(); let i = index">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>{{ type.id }}</td>
+              <td>{{ type.base_name }}</td>
+              <td>{{ type.price | currency:'VND':'symbol':'1.0-0' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="edit-btn" (click)="openEditModal(type)"><i class="fa fa-pencil"></i></button>
+                  <button class="delete-btn" (click)="confirmDeleteType(type.id, $event)"><i class="fa fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4 pb-4">
+        <div>
+          <span class="text-sm text-gray-700">
+            Hiển thị <span class="font-medium">{{ getStartItem() }}</span> đến <span class="font-medium">{{ getEndItem() }}</span> của <span class="font-medium">{{ totalItems }}</span> mục
+          </span>
+        </div>
+        <div class="flex space-x-1">
+          <button (click)="changePage(1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-left"></i>
+          </button>
+          <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-left"></i>
+          </button>
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <button (click)="changePage(page)" 
+                    class="px-3 py-1 rounded border" 
+                    [ngClass]="currentPage === page ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-50'">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-right"></i>
+          </button>
+          <button (click)="changePage(totalPages)" [disabled]="currentPage === totalPages" 
+                  class="px-3 py-1 rounded border" [ngClass]="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'">
+            <i class="fa fa-angle-double-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Type Modal -->
+<div id="editTypeModal" class="type-modal-overlay">
+  <div class="type-modal-content" *ngIf="selectedType">
+    <div class="type-modal-header">
+      <h3>Cập nhật thông tin phân loại</h3>
+      <button class="type-modal-close" onclick="document.getElementById('editTypeModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="type-modal-body">
+      <div class="type-modal-info">
+        <div class="form-group">
+          <label for="edit-type-name">Tên loại</label>
+          <input type="text" id="edit-type-name" [(ngModel)]="selectedType.base_name">
+          <div *ngIf="typeNameError" class="error-message">{{ typeNameError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-price">Giá thêm</label>
+          <input type="number" id="edit-price" [(ngModel)]="selectedType.price">
+          <div *ngIf="priceError" class="error-message">{{ priceError }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="type-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('editTypeModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="updateType()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Type Modal -->
+<div id="addTypeModal" class="type-modal-overlay">
+  <div class="type-modal-content">
+    <div class="type-modal-header">
+      <h3>Thêm phân loại mới</h3>
+      <button class="type-modal-close" onclick="document.getElementById('addTypeModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="type-modal-body">
+      <div class="type-modal-info">
+        <div class="form-group">
+          <label for="add-type-name">Tên loại <span class="required">*</span></label>
+          <input type="text" id="add-type-name" placeholder="Nhập tên loại" [(ngModel)]="newType.base_name">
+          <div *ngIf="newTypeNameError" class="error-message">{{ newTypeNameError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="add-price">Giá thêm <span class="required">*</span></label>
+          <input type="number" id="add-price" placeholder="Nhập giá thêm" [(ngModel)]="newType.price">
+          <div *ngIf="newPriceError" class="error-message">{{ newPriceError }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="type-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('addTypeModal').classList.remove('show')" [disabled]="isSubmitting">Hủy</button>
+      <button class="btn-save" (click)="addNewType()" [disabled]="isSubmitting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Đang thêm...' : 'Thêm phân loại' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div id="confirmDeleteModal" class="delete-modal-overlay">
+  <div class="delete-modal-content">
+    <div class="delete-modal-header">
+      <h3>Xác nhận xóa</h3>
+      <button class="delete-modal-close" onclick="document.getElementById('confirmDeleteModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="delete-modal-body">
+      <p>Bạn có chắc chắn muốn xóa phân loại này?</p>
+      <p class="warning">Hành động này không thể hoàn tác!</p>
+    </div>
+    <div class="delete-modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('confirmDeleteModal').classList.remove('show')" [disabled]="isDeleting">Hủy</button>
+      <button class="btn-delete" (click)="proceedDelete()" [disabled]="isDeleting">
+        <i class="fa fa-spinner fa-spin" *ngIf="isDeleting"></i>
+        {{ isDeleting ? 'Đang xóa...' : 'Xóa' }}
+      </button>
+    </div>
+  </div>
+</div>

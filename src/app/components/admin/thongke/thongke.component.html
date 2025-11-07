@@ -1,0 +1,328 @@
+<div class="thongke-container">
+  <h2 class="page-title">
+    Thống kê doanh thu
+    <button class="btn btn-back" (click)="navigateToOrders()">
+      <i class="fas fa-arrow-left"></i> Quay lại quản lý đơn hàng
+    </button>
+  </h2>
+  
+  <!-- Date filter section -->
+  <div class="filter-section">
+    <div class="date-filter">
+      <div class="form-group">
+        <label for="startDate">Từ ngày:</label>
+        <input type="date" id="startDate" [(ngModel)]="startDate" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="endDate">Đến ngày:</label>
+        <input type="date" id="endDate" [(ngModel)]="endDate" class="form-control">
+      </div>
+      <button class="btn btn-primary" (click)="applyDateFilter()">Áp dụng</button>
+    </div>
+  </div>
+  
+  <!-- Summary statistics -->
+  <div class="summary-stats">
+    <div class="stat-card">
+      <div class="stat-title">Tổng doanh thu</div>
+      <div class="stat-value">{{formatCurrency(totalRevenue)}}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Tổng đơn hàng</div>
+      <div class="stat-value">{{totalOrders}}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Giá trị trung bình</div>
+      <div class="stat-value">{{formatCurrency(averageOrderValue)}}</div>
+    </div>
+  </div>
+  
+  <!-- Chart section -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <h3>Biểu đồ doanh thu</h3>
+      <div class="chart-tabs">
+        <button [ngClass]="{'active': currentView === 'day'}" (click)="showChart('day')">Theo ngày</button>
+        <button [ngClass]="{'active': currentView === 'week'}" (click)="showChart('week')">Theo tuần</button>
+        <button [ngClass]="{'active': currentView === 'month'}" (click)="showChart('month')">Theo tháng</button>
+        <button [ngClass]="{'active': currentView === 'year'}" (click)="showChart('year')">Theo năm</button>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+      <div id="dailyChartContainer" class="chart-wrapper">
+        <div class="date-range-info" *ngIf="dateRangeLabels.length > 0">
+          Thống kê doanh thu từ ngày {{startDate}} đến ngày {{endDate}} ({{dateRangeLabels.length}} ngày)
+        </div>
+        <canvas id="dailyChart"></canvas>
+      </div>
+      
+      <div id="weeklyChartContainer" class="chart-wrapper">
+        <div class="date-range-info" *ngIf="weekRangeLabels.length > 0">
+          Thống kê doanh thu theo tuần từ ngày {{startDate}} đến ngày {{endDate}} ({{weekRangeLabels.length}} tuần)
+        </div>
+        <canvas id="weeklyChart"></canvas>
+      </div>
+      
+      <div id="monthlyChartContainer" class="chart-wrapper">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+      
+      <div id="yearlyChartContainer" class="chart-wrapper">
+        <canvas id="yearlyChart"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Best selling pizzas -->
+  <div class="pizza-stats-section">
+    <div class="pizza-stats-container">
+      <h3>Pizza bán chạy nhất</h3>
+      <div class="pizza-table">
+        <div class="loading-indicator" *ngIf="isLoading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Đang tải dữ liệu...</span>
+        </div>
+        <table *ngIf="!isLoading">
+          <thead>
+            <tr>
+              <th>Tên pizza</th>
+              <th>Số lượng bán</th>
+              <th>Doanh thu</th>
+              <th>Tỷ lệ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pizza of topSellingPizzas">
+              <td>{{pizza.name}}</td>
+              <td>{{pizza.quantity_sold}}</td>
+              <td>{{formatCurrency(pizza.revenue)}}</td>
+              <td>{{formatPercentage(pizza.percentage)}}</td>
+            </tr>
+            <tr *ngIf="topSellingPizzas.length === 0">
+              <td colspan="4" class="text-center">Không có dữ liệu</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Worst selling pizzas -->
+    <div class="pizza-stats-container">
+      <h3>Pizza bán chậm nhất</h3>
+      <div class="pizza-table">
+        <div class="loading-indicator" *ngIf="isLoading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Đang tải dữ liệu...</span>
+        </div>
+        <table *ngIf="!isLoading">
+          <thead>
+            <tr>
+              <th>Tên pizza</th>
+              <th>Số lượng bán</th>
+              <th>Doanh thu</th>
+              <th>Tỷ lệ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pizza of bottomSellingPizzas">
+              <td>{{pizza.name}}</td>
+              <td>{{pizza.quantity_sold}}</td>
+              <td>{{formatCurrency(pizza.revenue)}}</td>
+              <td>{{formatPercentage(pizza.percentage)}}</td>
+            </tr>
+            <tr *ngIf="bottomSellingPizzas.length === 0">
+              <td colspan="4" class="text-center">Không có dữ liệu</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top and Bottom Selling Pizzas -->
+  <!-- <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Top 5 Pizza Bán Chạy</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Pizza</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let pizza of topSellingPizzas">
+                  <td>{{ pizza.name }}</td>
+                  <td>{{ pizza.quantity_sold }}</td>
+                  <td>{{ pizza.revenue | currency:'VND' }}</td>
+                  <td>{{ pizza.percentage | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Top 5 Pizza Bán Chậm</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Pizza</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let pizza of bottomSellingPizzas">
+                  <td>{{ pizza.name }}</td>
+                  <td>{{ pizza.quantity_sold }}</td>
+                  <td>{{ pizza.revenue | currency:'VND' }}</td>
+                  <td>{{ pizza.percentage | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- Top and Bottom Selling Sizes -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Size bán chạy nhất</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let size of topSellingSizes">
+                  <td>{{ size.name }}</td>
+                  <td>{{ size.quantity_sold }}</td>
+                  <td>{{ size.revenue | currency:'VND' }}</td>
+                  <td>{{ size.percentage | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Size bán chậm nhất</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let size of bottomSellingSizes">
+                  <td>{{ size.name }}</td>
+                  <td>{{ size.quantity_sold }}</td>
+                  <td>{{ size.revenue | currency:'VND' }}</td>
+                  <td>{{ size.percentage | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top and Bottom Selling Base Types -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Phân loại bán chạy nhất</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Phân loại</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let baseType of topSellingBaseTypes">
+                  <td>{{ baseType.name }}</td>
+                  <td>{{ baseType.quantity_sold }}</td>
+                  <td>{{ baseType.revenue | currency:'VND' }}</td>
+                  <td>{{ baseType.percentage | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Phân loại bán chậm nhất</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Phân loại</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let baseType of bottomSellingBaseTypes">
+                  <td>{{ baseType.name }}</td>
+                  <td>{{ baseType.quantity_sold }}</td>
+                  <td>{{ baseType.revenue | currency:'VND' }}</td>
+                  <td>{{ baseType.percentage | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

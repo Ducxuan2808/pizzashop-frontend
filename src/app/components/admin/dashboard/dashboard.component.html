@@ -1,0 +1,64 @@
+<!-- Main container -->
+<div class="admin-dashboard-container">
+  <!-- Sidebar Menu -->
+  <div class="admin-sidebar">
+    
+    <ul class="sidebar-menu">
+      <li>
+        <a [class.active]="activeMenu === 'dashboard'" 
+           (click)="navigate('/admin/dashboard')">
+          <i class="fa fa-dashboard"></i> Dashboard
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeMenu === 'orders'" 
+           (click)="navigate('/admin/orders')">
+          <i class="fa fa-shopping-cart"></i> Quản lý đơn hàng
+        </a>
+      </li>
+      <!-- <li>
+        <a [class.active]="activeMenu === 'tablebooking'" 
+           (click)="navigate('/admin/tablebooking')">
+          <i class="fa fa-calendar"></i> Quản lý đặt bàn
+        </a>
+      </li> -->
+      <li>
+        <a [class.active]="activeMenu === 'pizzas'" 
+           (click)="navigate('/admin/pizzas')">
+          <i class="fa fa-pizza-slice"></i> Quản lý sản phẩm
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeMenu === 'sizes'" 
+           (click)="navigate('/admin/sizes')">
+          <i class="fa fa-ruler"></i> Quản lý kích thước
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeMenu === 'types'" 
+           (click)="navigate('/admin/types')">
+          <i class="fa fa-tags"></i> Quản lý phân loại
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeMenu === 'users'" 
+           (click)="navigate('/admin/users')">
+          <i class="fa fa-users"></i> Quản lý tài khoản
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeMenu === 'membership'" 
+           (click)="navigate('/admin/membership')">
+          <i class="fa fa-user-circle-o"></i> Quản lý thành viên
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeMenu === 'statistics'" 
+           (click)="navigate('/admin/statistics')">
+          <i class="fa fa-chart-bar"></i> Thống kê
+        </a>
+      </li>
+    </ul>
+  </div>
+
+</div>
